@@ -28,7 +28,14 @@ def recognize_speech():
     animation_thread.start()
     
     with sr.Microphone() as source:
-        audio = recognizer.listen(source)
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            print("Audio captured")
+        except sr.WaitTimeoutError:
+            stop_event.set()
+            animation_thread.join()
+            print("\nListening timed out while waiting for phrase to start")
+            return -1
         stop_event.set()
         animation_thread.join()
         try:
@@ -41,10 +48,19 @@ def recognize_speech():
         except sr.RequestError as e:
             print(f"\nSorry, I couldn't request results; {e}")
             return None
+        
 
 for i, correct_word in enumerate(missing_words):
     while True:
         user_word = recognize_speech()
+        if user_word == -1:
+            # Timeout, stop the game and wait for user to manually continue
+            print("Time's up! Do you want to retry? (yes/no)")
+            retry = input()
+            if retry.lower() == "yes":
+                break
+            else:
+                sys.exit(0)
         if user_word is None:
             print("Please try again")
             continue
