@@ -105,7 +105,7 @@ def clear_area(screen, rect):
 
 def display_result(screen, is_correct, position=(WINDOW_WIDTH // 2, 300)):
     if is_correct:
-        display_text(screen, "Correct!", position=position, font_size=48, color=CORRECT_COLOR)
+        display_text(screen, "Correct!", position=position, font_size=48, color=CORRECT_COLOR, clear_area=True, area_size=(WINDOW_WIDTH, 50))
     else:
         display_text(screen, "Incorrect, try again.", position=position, font_size=48, color=INCORRECT_COLOR)
 

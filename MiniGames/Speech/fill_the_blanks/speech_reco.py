@@ -16,7 +16,7 @@ def listening_animation(stop_event, timeout):
         time.sleep(0.1)
     sys.stdout.write("\r" + " " * 30 + "\r")  # Clear the line
 
-def recognize_speech(timeout=5):
+def recognize_speech(timeout=10):
     stop_event = threading.Event()
     animation_thread = threading.Thread(target=listening_animation, args=(stop_event, timeout))
     animation_thread.start()
@@ -27,6 +27,7 @@ def recognize_speech(timeout=5):
     def listen():
         nonlocal audio
         with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source)
             try:
                 audio = recognizer.listen(source, timeout=timeout)
             except sr.WaitTimeoutError:

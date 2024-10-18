@@ -108,6 +108,7 @@ results = [
     ("laptop", "bottle", 17, 57, 86, False),
     ("shark", "fish", 44, 40, 84, False),
     ("sugar", "salt", 44, 0, 84, False),
+    
     # MIDDLE (borderline cases)
     ("adventure", "inventor", 59, 83, 88, False),
     ("brake", "break", 80, 100, 75, True),
