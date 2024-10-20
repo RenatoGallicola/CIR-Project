@@ -291,7 +291,7 @@ class HandGesture(object):
 
         return image
 
-    def _draw_info_box(image, box, handedness, hand_sign_text, pointer_gesture_text, enable_pointer):
+    def _draw_info_box(image, box, handedness, hand_sign_text, pointer_gesture_text, enable_pointer, is_pointer):
 
         info_text = handedness.classification[0].label[0:]
         if hand_sign_text != "":
@@ -304,7 +304,7 @@ class HandGesture(object):
         cv.rectangle(image, (box[0], box[1]), (box[0] + label_width, box[1] - label_height), (0, 0, 0), -1)
         cv.putText(image, info_text, (box[0] + text_margin_left, box[1] - text_margin_bottom), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
 
-        if enable_pointer:
+        if enable_pointer and is_pointer:
             if pointer_gesture_text != "":
                 cv.putText(image, "Pointer Gesture:" + pointer_gesture_text, (10, 60), cv.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), 4, cv.LINE_AA)
                 cv.putText(image, "Pointer Gesture:" + pointer_gesture_text, (10, 60), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv.LINE_AA)
@@ -324,12 +324,25 @@ class HandGesture(object):
 
         mode_string = ['Logging Key Point', 'Logging Point History']
         if 1 <= mode <= 2:
-            cv.putText(image, "MODE:" + mode_string[mode - 1], (10, 90), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+            cv.putText(image, "MODE : " + mode_string[mode - 1], (10, 90), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2, cv.LINE_AA)
+            cv.putText(image, "MODE : " + mode_string[mode - 1], (10, 90), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
             if 0 <= number <= 9:
-                cv.putText(image, "NUM:" + str(number), (10, 110), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+                cv.putText(image, "NUM : " + str(number), (10, 110), cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2, cv.LINE_AA)
+                cv.putText(image, "NUM : " + str(number), (10, 110), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
         return image
 
-    def start(num_hands = 2, enable_pointer = False, show_fps = False, show_bounding_box = True, show_info_box = True):
+
+
+        out = []
+
+        unique_nums = set(nums)
+
+        for num in unique_nums:
+            out.append(num)
+
+        return out
+
+    def start(num_hands = 2, enable_pointer = False, show_fps = False, show_bounding_box = True, show_info_box = True, enable_csv_update = False):
         # Argument parsing
         args = HandGesture.__get_args()
 
@@ -345,6 +358,10 @@ class HandGesture(object):
         cap = cv.VideoCapture(cap_device)
         cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
         cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+
+        # Pointer works with only one hand
+        if enable_pointer:
+            num_hands = 1
 
         # Load model
         mp_hands = mp.solutions.hands
@@ -372,7 +389,7 @@ class HandGesture(object):
         if enable_pointer:
             history_classifier = HistoryClassifier()
             
-            with open('Utils/Gesture/History/history_samples.csv', encoding='utf-8-sig') as f:
+            with open('Utils/Gesture/History/history_labels.csv', encoding='utf-8-sig') as f:
                 point_history_classifier_labels = csv.reader(f)
                 point_history_classifier_labels = [row[0] for row in point_history_classifier_labels]
 
@@ -389,8 +406,11 @@ class HandGesture(object):
             key = cv.waitKey(10)
             if key == 27: # 27 = ESC
                 break
-
-            number, mode = HandGesture._select_mode(key, mode)
+            
+            if enable_csv_update:
+                number, mode = HandGesture._select_mode(key, mode)
+            else:
+                number, mode = -1, 0
 
             # Frame capture
             ret, image = cap.read()
@@ -450,10 +470,12 @@ class HandGesture(object):
 
                     debug_image = HandGesture._draw_landmarks(debug_image, landmark_list)
                     
-                    if enable_pointer:
-                        history_labels = point_history_classifier_labels[most_common_pointer_id[0][0]]
+                    is_pointer = hand_sign_id == HandGesture._get_pointer_idx()
+
+                    if enable_pointer and is_pointer:
+                        history_label = point_history_classifier_labels[most_common_pointer_id[0][0]]
                     else:
-                        history_labels = None
+                        history_label = None
 
                     if show_info_box:
                         debug_image = HandGesture._draw_info_box(
@@ -461,8 +483,9 @@ class HandGesture(object):
                             bound_box,
                             handedness,
                             keypoint_classifier_labels[hand_sign_id],
-                            history_labels,
-                            enable_pointer
+                            history_label,
+                            enable_pointer,
+                            is_pointer
                         )
             else:
                 if enable_pointer:
