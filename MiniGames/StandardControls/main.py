@@ -1,6 +1,7 @@
 # import libaries
 import pygame
 import random
+import numpy as np
 
 # initialize all modules
 pygame.init()
@@ -20,7 +21,8 @@ subtitle_font = pygame.font.Font("freesansbold.ttf", 18)
 
 rows = 4 # number of squares in each row
 cols = 4 # number of squares in each column
-correct = []
+correct = [np.zeros([rows, cols])]
+print(correct)
 options_list = []
 spaces = []
 used = []
@@ -29,6 +31,7 @@ first_guess = False
 second_guess = False
 first_guess_num = None
 second_guess_num = None
+matches = 0
 
 # create screen
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
@@ -109,7 +112,7 @@ def generate_board():
 
     Returns
     -------
-    list of sqaures (cards)
+    -
 
     '''
     global options_list, spaces, used
@@ -129,6 +132,36 @@ def generate_board():
         else:
             used.append(square)
 
+def check_guesses(first, second):
+    '''
+    Assign each square a number from 0-len()
+
+    Arguments
+    ----------
+    -
+
+    Returns
+    -------
+    -
+
+    '''
+    global spaces, correct, matches
+
+    if spaces[first] == spaces[second]:
+        # identifying position of the sqaure that is clicked on
+        col1 = first // rows
+        col2 = second // rows
+        row1 = first - (first // rows * rows)
+        row2 = second - (second // rows * rows)
+
+        # update correct matrix to identify correct guess
+        correct[0][row1][col1] = 1
+        correct[0][row2][col2] = 1
+
+        matches += 1
+        print(correct)
+
+
 running = True
 while running:
     timer.tick(fps)
@@ -140,6 +173,11 @@ while running:
 
     background_setup()
     board = board_setup()
+
+    if first_guess and second_guess:
+        check_guesses(first_guess_num, second_guess_num)
+        first_guess = False
+        second_guess = False
 
 
     for event in pygame.event.get():
@@ -158,10 +196,6 @@ while running:
                     second_guess = True
                     second_guess_num = i
                     print(i)
-    
-    if first_guess and second_guess:
-        first_guess = False
-        second_guess = False
 
     pygame.display.flip()
 pygame.quit()
