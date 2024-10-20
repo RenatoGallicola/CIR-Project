@@ -12,6 +12,7 @@ HEIGHT = 600
 black = (0,0,0) # RGB color value
 white = (255,255,255) # RGB color value
 grey = (120,120,120) # RGB color value
+green = (0, 255, 0) # RGB color value
 
 fps = 60 # frames per second, how fast the game can run
 timer = pygame.time.Clock()
@@ -83,7 +84,7 @@ def board_setup():
 
     '''
     # retrieve global variables
-    global rows, cols
+    global rows, cols, correct
 
     board_list = []
 
@@ -99,6 +100,14 @@ def board_setup():
             # write assigned number to each square
             sqaure_text = subtitle_font.render(f'{spaces[i * rows + j]}', True, black)
             screen.blit(sqaure_text, (i * 100 + 145, j * 100 + 141))
+
+    for r in range(rows):
+        for c in range(cols):
+            if correct[0][r][c] == 1:
+                pygame.draw.rect(screen, green, [c * 100 + 108, r * 100 + 108, 84, 84], 3, 4)
+                sqaure_text = subtitle_font.render(f'{spaces[c * rows + r]}', True, black)
+                screen.blit(sqaure_text, (c * 100 + 145, r * 100 + 141))
+
 
     return board_list
 
@@ -134,11 +143,12 @@ def generate_board():
 
 def check_guesses(first, second):
     '''
-    Assign each square a number from 0-len()
+    Check if the two guess are macthing 
 
     Arguments
     ----------
-    -
+    first: int
+    second: int
 
     Returns
     -------
