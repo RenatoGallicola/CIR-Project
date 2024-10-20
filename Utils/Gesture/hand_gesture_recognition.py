@@ -12,6 +12,7 @@ import itertools
 from Keypoint.keypoint_classifier import KeypointClassifier
 from History.history_classifier import HistoryClassifier
 from collections import Counter
+import threading
 
 class _FpsCounter:
     def __init__(self, buffer_len=1):
@@ -32,6 +33,30 @@ class _FpsCounter:
         return fps_rounded
 
 class HandGesture(object):
+    def __init__(
+        self,
+        num_hands = 2, 
+        enable_pointer = False, 
+        show_fps = False, 
+        show_bounding_box = True, 
+        show_info_box = True, 
+        enable_csv_update = False,
+        enable_esc_exit = None
+    ):
+        self.__num_hands = num_hands
+        self.__enable_pointer = enable_pointer
+        self.__show_fps = show_fps 
+        self.__show_bounding_box = show_bounding_box 
+        self.__show_info_box = show_info_box 
+        self.__enable_csv_update = enable_csv_update
+        self.__enable_esc_exit = enable_esc_exit
+
+        self.__history_length = 16
+        self.__currentGesture = {"Right": None, "Left": None}
+        self.__gesture_lock = threading.Lock()
+        self.__stop_flag = threading.Event()
+        self.__is_running = False
+
     def __get_args():
         parser = argparse.ArgumentParser()
 
@@ -53,7 +78,7 @@ class HandGesture(object):
 
         return args
 
-    def _select_mode(key, mode):
+    def __select_mode(key, mode):
         number = -1
         if 48 <= key <= 57:  # 0 - 9
             number = key - 48
@@ -65,7 +90,7 @@ class HandGesture(object):
             mode = 2
         return number, mode
 
-    def _calc_bounding_box(image, landmarks):
+    def __calc_bounding_box(image, landmarks):
         image_width, image_height = image.shape[1], image.shape[0]
 
         landmark_array = np.empty((0, 2), int)
@@ -82,7 +107,7 @@ class HandGesture(object):
 
         return [x, y, x + w, y + h]
 
-    def _calc_landmark_list(image, landmarks):
+    def __calc_landmark_list(image, landmarks):
         image_width, image_height = image.shape[1], image.shape[0]
 
         landmark_point = []
@@ -95,7 +120,7 @@ class HandGesture(object):
 
         return landmark_point
 
-    def _pre_process_landmark(landmark_list):
+    def __pre_process_landmark(landmark_list):
         temp_landmark_list = copy.deepcopy(landmark_list)
 
         # Convert to relative coordinates
@@ -120,7 +145,7 @@ class HandGesture(object):
 
         return temp_landmark_list
 
-    def _pre_process_point_history(image, point_history):
+    def __pre_process_point_history(image, point_history):
         image_width, image_height = image.shape[1], image.shape[0]
 
         temp_point_history = copy.deepcopy(point_history)
@@ -139,7 +164,7 @@ class HandGesture(object):
 
         return temp_point_history
 
-    def _update_csv(number, mode, landmark_list, point_history_list):
+    def __update_csv(number, mode, landmark_list, point_history_list):
         if mode == 0:
             pass
         if mode == 1 and (0 <= number <= 9):
@@ -154,7 +179,7 @@ class HandGesture(object):
                 writer.writerow([number, *point_history_list])
         return
 
-    def _get_pointer_idx():
+    def __get_pointer_idx():
         path = 'Utils/Gesture/Keypoint/keypoint_labels.csv'
         with open(path, mode='r', newline='') as file:
             reader = csv.reader(file)
@@ -163,11 +188,11 @@ class HandGesture(object):
                     return index
         return -1
 
-    def _draw_bounding_box(image, box):
+    def __draw_bounding_box(image, box):
         cv.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 0, 0), 1)
         return image
 
-    def _draw_landmarks(image, landmark_point):
+    def __draw_landmarks(image, landmark_point):
         if len(landmark_point) > 0:
             # Thumb
             cv.line(image, tuple(landmark_point[2]), tuple(landmark_point[3]), (0, 0, 0), 6)
@@ -291,7 +316,7 @@ class HandGesture(object):
 
         return image
 
-    def _draw_info_box(image, box, handedness, hand_sign_text, pointer_gesture_text, enable_pointer, is_pointer):
+    def __draw_info_box(image, box, handedness, hand_sign_text, pointer_gesture_text, enable_pointer, is_pointer):
 
         info_text = handedness.classification[0].label[0:]
         if hand_sign_text != "":
@@ -311,13 +336,13 @@ class HandGesture(object):
     
         return image
 
-    def _draw_point_history(image, point_history):
+    def __draw_point_history(image, point_history):
         for index, point in enumerate(point_history):
             if point[0] != 0 and point[1] != 0:
                 cv.circle(image, (point[0], point[1]), 1 + int(index / 2), (152, 251, 152), 2)
         return image
 
-    def _draw_info(image, fps, mode, number, show_fps):
+    def __draw_info(image, fps, mode, number, show_fps):
         if show_fps:
             cv.putText(image, "FPS:" + str(fps), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), 4, cv.LINE_AA)
             cv.putText(image, "FPS:" + str(fps), (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv.LINE_AA)
@@ -331,18 +356,30 @@ class HandGesture(object):
                 cv.putText(image, "NUM : " + str(number), (10, 110), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
         return image
 
+    def __set_current_gesture(self, gesture):
+        self.__gesture_lock.acquire()
+        try:
+            self.__currentGesture["Right"] = gesture["Right"]
+            self.__currentGesture["Left"] = gesture["Left"]
+        finally:
+            self.__gesture_lock.release()
 
+    def get_current_gesture(self):
+        self.__gesture_lock.acquire()
+        try:
+            return self.__currentGesture
+        finally:
+            self.__gesture_lock.release()
 
-        out = []
+    def stop(self):
+        self.__stop_flag.set()
 
-        unique_nums = set(nums)
+    def is_running(self):
+        return self.__is_running
+    
+    def start(self):
+        self.__is_running = True
 
-        for num in unique_nums:
-            out.append(num)
-
-        return out
-
-    def start(num_hands = 2, enable_pointer = False, show_fps = False, show_bounding_box = True, show_info_box = True, enable_csv_update = False):
         # Argument parsing
         args = HandGesture.__get_args()
 
@@ -360,14 +397,14 @@ class HandGesture(object):
         cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 
         # Pointer works with only one hand
-        if enable_pointer:
-            num_hands = 1
+        if self.__enable_pointer:
+            self.__num_hands = 1
 
         # Load model
         mp_hands = mp.solutions.hands
         hands = mp_hands.Hands(
             static_image_mode=use_static_image_mode,
-            max_num_hands=num_hands,
+            max_num_hands=self.__num_hands,
             min_detection_confidence=min_detection_confidence,
             min_tracking_confidence=min_tracking_confidence,
         )
@@ -379,36 +416,35 @@ class HandGesture(object):
             keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
 
         # FPS Measurement 
-        if show_fps:
+        if self.__show_fps:
             FpsCount = _FpsCounter(buffer_len=10)
 
         # Initialize mode
         mode = 0
         
         # Manage pointer
-        if enable_pointer:
+        if self.__enable_pointer:
             history_classifier = HistoryClassifier()
             
             with open('Utils/Gesture/History/history_labels.csv', encoding='utf-8-sig') as f:
                 point_history_classifier_labels = csv.reader(f)
                 point_history_classifier_labels = [row[0] for row in point_history_classifier_labels]
 
-            # History 
-            history_length = 16
-            point_history = deque(maxlen=history_length)
-            pointer_gesture_history = deque(maxlen=history_length)
+            # History
+            point_history = deque(maxlen=self.__history_length)
+            pointer_gesture_history = deque(maxlen=self.__history_length)
 
-        while True:
-            if show_fps:
+        while True and not self.__stop_flag.is_set():
+            if self.__show_fps:
                 fps = FpsCount.get()
 
             # Close camera
             key = cv.waitKey(10)
-            if key == 27: # 27 = ESC
+            if self.__enable_esc_exit and key == 27: # 27 = ESC
                 break
             
-            if enable_csv_update:
-                number, mode = HandGesture._select_mode(key, mode)
+            if self.__enable_csv_update:
+                number, mode = HandGesture.__select_mode(key, mode)
             else:
                 number, mode = -1, 0
 
@@ -425,31 +461,33 @@ class HandGesture(object):
             results = hands.process(image)
             image.flags.writeable = True
 
+            temp_gesture = {"Right": None, "Left": None}
+            
             if results.multi_hand_landmarks is not None:
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     # Bounding box calculation
-                    if show_bounding_box:
-                        bound_box = HandGesture._calc_bounding_box(debug_image, hand_landmarks)
+                    if self.__show_bounding_box:
+                        bound_box = HandGesture.__calc_bounding_box(debug_image, hand_landmarks)
                     
                     # Landmarks calculation
-                    landmark_list = HandGesture._calc_landmark_list(debug_image, hand_landmarks)
+                    landmark_list = HandGesture.__calc_landmark_list(debug_image, hand_landmarks)
 
                     # Normalize landmarks
-                    pre_processed_landmark_list = HandGesture._pre_process_landmark(landmark_list)
+                    pre_processed_landmark_list = HandGesture.__pre_process_landmark(landmark_list)
 
-                    if enable_pointer:
-                        pre_processed_point_history_list = HandGesture._pre_process_point_history(debug_image, point_history)
+                    if self.__enable_pointer:
+                        pre_processed_point_history_list = HandGesture.__pre_process_point_history(debug_image, point_history)
                     else:
                         pre_processed_point_history_list = None
                     
                     # Update dataset file
-                    HandGesture._update_csv(number, mode, pre_processed_landmark_list,pre_processed_point_history_list)
+                    HandGesture.__update_csv(number, mode, pre_processed_landmark_list,pre_processed_point_history_list)
 
                     # Hand sign classification
                     hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
                     
-                    if enable_pointer:
-                        if hand_sign_id == HandGesture._get_pointer_idx():  
+                    if self.__enable_pointer:
+                        if hand_sign_id == HandGesture.__get_pointer_idx():  
                             point_history.append(landmark_list[8])
                         else:
                             point_history.append([0, 0])
@@ -457,7 +495,7 @@ class HandGesture(object):
                         # Finger gesture
                         pointer_gesture_id = 0
                         pointer_history_len = len(pre_processed_point_history_list)
-                        if pointer_history_len == (history_length * 2):
+                        if pointer_history_len == (self.__history_length * 2):
                             pointer_gesture_id = history_classifier(pre_processed_point_history_list)
 
                         # Gesture IDs
@@ -465,39 +503,45 @@ class HandGesture(object):
                         most_common_pointer_id = Counter(pointer_gesture_history).most_common()
 
                     # Drawing elements
-                    if show_bounding_box:
-                        debug_image = HandGesture._draw_bounding_box(debug_image, bound_box)
+                    if self.__show_bounding_box:
+                        debug_image = HandGesture.__draw_bounding_box(debug_image, bound_box)
 
-                    debug_image = HandGesture._draw_landmarks(debug_image, landmark_list)
+                    debug_image = HandGesture.__draw_landmarks(debug_image, landmark_list)
                     
-                    is_pointer = hand_sign_id == HandGesture._get_pointer_idx()
+                    is_pointer = hand_sign_id == HandGesture.__get_pointer_idx()
 
-                    if enable_pointer and is_pointer:
+                    if self.__enable_pointer and is_pointer:
                         history_label = point_history_classifier_labels[most_common_pointer_id[0][0]]
                     else:
                         history_label = None
 
-                    if show_info_box:
-                        debug_image = HandGesture._draw_info_box(
+                    if self.__show_info_box:
+                        debug_image = HandGesture.__draw_info_box(
                             debug_image,
                             bound_box,
                             handedness,
                             keypoint_classifier_labels[hand_sign_id],
                             history_label,
-                            enable_pointer,
+                            self.__enable_pointer,
                             is_pointer
                         )
+                    temp_gesture[handedness.classification[0].label[0:]] = keypoint_classifier_labels[hand_sign_id]
             else:
-                if enable_pointer:
+                if self.__enable_pointer:
                     point_history.append([0, 0])
 
-            if enable_pointer:
-                debug_image = HandGesture._draw_point_history(debug_image, point_history)
+            if self.__enable_pointer:
+                debug_image = HandGesture.__draw_point_history(debug_image, point_history)
             
-            if show_info_box:
-                debug_image = HandGesture._draw_info(debug_image, fps, mode, number, show_fps)
+            if self.__show_info_box:
+                debug_image = HandGesture.__draw_info(debug_image, fps, mode, number, self.__show_fps)
 
             cv.imshow('Hand Gesture Recognition', debug_image)
 
+            self.__set_current_gesture(temp_gesture)
+
         cap.release()
         cv.destroyAllWindows()
+
+        self.__is_running = False
+        self.stop() # Stop the thread when the loop ends due to a esc key press
