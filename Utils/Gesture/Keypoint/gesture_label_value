@@ -1,0 +1,23 @@
+from enum import Enum
+
+class GestureLabelValue(Enum):
+    Fist = 0
+    OK = 0
+    Index = 1
+    ThumbsUp = 1
+    Peace = 2
+    Salute = 3
+    Scout = 3
+    StarTrek = 4
+    Open = 5
+    ThumbsDown = -1
+    Neutral = -1
+    MammaMia = -1
+
+    @classmethod
+    def getValue(self,label):
+        try:
+            val = GestureLabelValue[label].value
+            return val
+        except KeyError:
+            return None

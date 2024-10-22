@@ -13,6 +13,7 @@ from Keypoint.keypoint_classifier import KeypointClassifier
 from History.history_classifier import HistoryClassifier
 from collections import Counter
 import threading
+import time
 
 class _FpsCounter:
     def __init__(self, buffer_len=1):
@@ -41,7 +42,8 @@ class HandGesture(object):
         show_bounding_box = True, 
         show_info_box = True, 
         enable_csv_update = False,
-        enable_esc_exit = None
+        enable_esc_exit = None,
+        register_gesture_unit = 0
     ):
         self.__num_hands = num_hands
         self.__enable_pointer = enable_pointer
@@ -50,6 +52,7 @@ class HandGesture(object):
         self.__show_info_box = show_info_box 
         self.__enable_csv_update = enable_csv_update
         self.__enable_esc_exit = enable_esc_exit
+        self.__register_gesture_unit = register_gesture_unit
 
         self.__history_length = 16
         self.__currentGesture = {"Right": None, "Left": None}
@@ -164,14 +167,15 @@ class HandGesture(object):
 
         return temp_point_history
 
-    def __update_csv(number, mode, landmark_list, point_history_list):
+    def __update_csv(self, number, mode, landmark_list, point_history_list):
         if mode == 0:
             pass
         if mode == 1 and (0 <= number <= 9):
             csv_path = 'Utils/Gesture/Keypoint/keypoint_samples.csv'
             with open(csv_path, 'a', newline="") as f:
+                num = self.__register_gesture_unit * 10 + number
                 writer = csv.writer(f)
-                writer.writerow([number, *landmark_list])
+                writer.writerow([num, *landmark_list])
         if mode == 2 and (0 <= number <= 9) and point_history_list is not None:
             csv_path = 'Utils/Gesture/Keypoint/keypoint__history.csv'
             with open(csv_path, 'a', newline="") as f:
@@ -481,7 +485,7 @@ class HandGesture(object):
                         pre_processed_point_history_list = None
                     
                     # Update dataset file
-                    HandGesture.__update_csv(number, mode, pre_processed_landmark_list,pre_processed_point_history_list)
+                    self.__update_csv(number, mode, pre_processed_landmark_list,pre_processed_point_history_list)
 
                     # Hand sign classification
                     hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
