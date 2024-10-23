@@ -99,8 +99,8 @@ def board_setup():
             board_list.append(square)
 
             # write assigned number to each square
-            sqaure_text = subtitle_font.render(f'{spaces[i * rows + j]}', True, black)
-            screen.blit(sqaure_text, (i * 100 + 145, j * 100 + 141))
+            # sqaure_text = subtitle_font.render(f'{spaces[i * rows + j]}', True, black)
+            # screen.blit(sqaure_text, (i * 100 + 145, j * 100 + 141))
 
     for r in range(rows):
         for c in range(cols):
@@ -170,7 +170,7 @@ def check_guesses(first, second):
         correct[0][row2][col2] = 1
 
         matches += 1
-        print(correct)
+        # print(correct)
 
 
 running = True
@@ -179,7 +179,7 @@ while running:
     screen.fill(white)
     if new_board:
         generate_board()
-        print(spaces)
+        # print(spaces)
         new_board = False
 
     background_setup()
@@ -187,6 +187,7 @@ while running:
 
     if first_guess and second_guess:
         check_guesses(first_guess_num, second_guess_num)
+        pygame.time.delay(1000)
         first_guess = False
         second_guess = False
 
@@ -201,18 +202,29 @@ while running:
                 if button.collidepoint(event.pos) and not first_guess:
                     first_guess = True
                     first_guess_num = i
-                    print(i)
+                    # print(i)
                 
                 if button.collidepoint(event.pos) and not second_guess and first_guess and i != first_guess_num:
                     second_guess = True
                     second_guess_num = i
-                    print(i)
+                    # print(i)
 
-    # mark current guess in blue
+    # mark first guess in blue
     if first_guess:
         sqaure_text = subtitle_font.render(f'{spaces[first_guess_num]}', True, blue)
         location = (first_guess_num // rows * 100 + 145, (first_guess_num - (first_guess_num // rows * rows)) * 100 + 141)
         screen.blit(sqaure_text, (location))
+
+    # mark second guess in blue
+    if second_guess:
+        sqaure_text = subtitle_font.render(f'{spaces[second_guess_num]}', True, blue)
+        location = (second_guess_num // rows * 100 + 145, (second_guess_num - (second_guess_num // rows * rows)) * 100 + 141)
+        screen.blit(sqaure_text, (location))
+
+    if matches == rows*cols // 2:
+        game_finish = pygame.draw.rect(screen, black, [10, HEIGHT - 350, WIDTH - 20, 50], 0, 5)
+        game_finish_text = title_font.render("Congrats! You completed the game", True, white)
+        screen.blit(game_finish_text, (100, HEIGHT - 341))
 
     pygame.display.flip()
 pygame.quit()
