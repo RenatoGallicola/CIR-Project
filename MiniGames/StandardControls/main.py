@@ -13,6 +13,7 @@ black = (0,0,0) # RGB color value
 white = (255,255,255) # RGB color value
 grey = (120,120,120) # RGB color value
 green = (0, 255, 0) # RGB color value
+blue = (0, 0, 255) # RGB color value
 
 fps = 60 # frames per second, how fast the game can run
 timer = pygame.time.Clock()
@@ -206,6 +207,12 @@ while running:
                     second_guess = True
                     second_guess_num = i
                     print(i)
+
+    # mark current guess in blue
+    if first_guess:
+        sqaure_text = subtitle_font.render(f'{spaces[first_guess_num]}', True, blue)
+        location = (first_guess_num // rows * 100 + 145, (first_guess_num - (first_guess_num // rows * rows)) * 100 + 141)
+        screen.blit(sqaure_text, (location))
 
     pygame.display.flip()
 pygame.quit()
