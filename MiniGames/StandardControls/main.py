@@ -35,11 +35,15 @@ first_guess_num = None
 second_guess_num = None
 matches = 0
 
+player_score = 0 
+computer_score = 0
+player_turn = True # player starts
+
 # create screen
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 
 # name window
-pygame.display.set_caption("Memory Match")
+pygame.display.set_caption("Memory Match 1v1")
 
 
 def background_setup():
@@ -59,16 +63,22 @@ def background_setup():
     top_menu = pygame.draw.rect(screen, black, [0, 0, WIDTH, 100])
     
     # add text to title
-    title_text = title_font.render("Memory Match Game", True, white)
+    title_text = title_font.render("Memory Match Game 1v1", True, white)
     screen.blit(title_text, (10, 20))
     
     # add text to subtitle
-    subtitle_text = subtitle_font.render("Instructions: xzy", True, white)
+    subtitle_text = subtitle_font.render("Instructions: Find the most matches before the guards does!", True, white)
     screen.blit(subtitle_text, (10, 50))
     
     # define bottom menu
     bottom_menu = pygame.draw.rect(screen, black, [0, HEIGHT-100, WIDTH, 100])
     #board_space = pygame.draw.rect(screen, grey, [0, 100, WIDTH, HEIGHT-200])
+
+    # show scores 
+    player_score_text = subtitle_font.render(f"Player's Score: {player_score}", True, white)
+    screen.blit(player_score_text, (20, HEIGHT-80))
+    computer_score_text = subtitle_font.render(f"Guard's score: {computer_score}", True, white)
+    screen.blit(computer_score_text, (20, HEIGHT-50))
 
 def board_setup():
     '''
@@ -221,6 +231,7 @@ while running:
         location = (second_guess_num // rows * 100 + 145, (second_guess_num - (second_guess_num // rows * rows)) * 100 + 141)
         screen.blit(sqaure_text, (location))
 
+    # if all matches has been found and game is done
     if matches == rows*cols // 2:
         game_finish = pygame.draw.rect(screen, black, [10, HEIGHT - 350, WIDTH - 20, 50], 0, 5)
         game_finish_text = title_font.render("Congrats! You completed the game", True, white)
