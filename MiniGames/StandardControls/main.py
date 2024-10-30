@@ -204,7 +204,6 @@ while running:
     screen.fill(white)
     if new_board:
         generate_board()
-        # print(spaces)
         new_board = False
 
     background_setup()
@@ -215,8 +214,15 @@ while running:
         pygame.time.delay(1500)
         while True:
             first_guess_num = random.randint(0, rows*cols-1)
-            print(spaces)
-            if first_guess_num not in correct[0].flatten():
+            #print(spaces)
+            #if first_guess_num not in correct[0].flatten():
+            #    first_guess = True
+            #    break
+            # Calculate row and column for the first guess
+            col1, row1 = divmod(first_guess_num, rows)
+            
+            # Check if the square is already matched
+            if correct[0][row1][col1] == 0:
                 first_guess = True
                 break
         
@@ -229,10 +235,17 @@ while running:
         
         while True:
             second_guess_num = random.randint(0, rows*cols-1)
-            if second_guess_num != first_guess_num and second_guess_num not in correct[0].flatten():
+            #if second_guess_num != first_guess_num and second_guess_num not in correct[0].flatten():
+            #    second_guess = True
+            #    break
+            # Calculate row and column for the second guess
+            col2, row2 = divmod(second_guess_num, rows)
+            
+            # Ensure the second guess is different from the first and is not already matched
+            if second_guess_num != first_guess_num and correct[0][row2][col2] == 0:
                 second_guess = True
                 break
-        
+            
         # write second guess
         square_text = subtitle_font.render(f'{spaces[second_guess_num]}', True, blue)
         location = (second_guess_num // rows * 100 + 145, (second_guess_num % rows) * 100 + 141)
