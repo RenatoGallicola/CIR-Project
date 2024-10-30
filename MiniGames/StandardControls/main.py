@@ -24,7 +24,6 @@ subtitle_font = pygame.font.Font("freesansbold.ttf", 18)
 rows = 4 # number of squares in each row
 cols = 4 # number of squares in each column
 correct = [np.zeros([rows, cols])]
-print(correct)
 options_list = []
 spaces = []
 used = []
@@ -109,16 +108,15 @@ def board_setup():
             board_list.append(square)
 
             # write assigned number to each square
-            # sqaure_text = subtitle_font.render(f'{spaces[i * rows + j]}', True, black)
-            # screen.blit(sqaure_text, (i * 100 + 145, j * 100 + 141))
+            #sqaure_text = subtitle_font.render(f'{spaces[i * rows + j]}', True, black)
+            #screen.blit(sqaure_text, (i * 100 + 145, j * 100 + 141))
 
     for r in range(rows):
-        for c in range(cols):
-            if correct[0][r][c] == 1:
-                pygame.draw.rect(screen, green, [c * 100 + 108, r * 100 + 108, 84, 84], 3, 4)
-                sqaure_text = subtitle_font.render(f'{spaces[c * rows + r]}', True, black)
-                screen.blit(sqaure_text, (c * 100 + 145, r * 100 + 141))
-
+            for c in range(cols):
+                if correct[0][r][c] == 1:
+                    pygame.draw.rect(screen, green, [c * 100 + 108, r * 100 + 108, 84, 84], 3, 4)
+                    sqaure_text = subtitle_font.render(f'{spaces[c * rows + r]}', True, black)
+                    screen.blit(sqaure_text, (c * 100 + 145, r * 100 + 141))
 
     return board_list
 
@@ -166,7 +164,7 @@ def check_guesses(first, second):
     -
 
     '''
-    global spaces, correct, matches
+    global spaces, correct, matches, player_score, computer_score, player_turn
 
     if spaces[first] == spaces[second]:
         # identifying position of the sqaure that is clicked on
@@ -179,9 +177,26 @@ def check_guesses(first, second):
         correct[0][row1][col1] = 1
         correct[0][row2][col2] = 1
 
-        matches += 1
-        # print(correct)
+        for r in range(rows):
+            for c in range(cols):
+                if correct[0][r][c] == 1:
+                    pygame.draw.rect(screen, green, [c * 100 + 108, r * 100 + 108, 84, 84], 3, 4)
+                    sqaure_text = subtitle_font.render(f'{spaces[c * rows + r]}', True, black)
+                    screen.blit(sqaure_text, (c * 100 + 145, r * 100 + 141))
+        
+        pygame.display.flip()
 
+        matches += 1
+        
+        # Update scores
+        if player_turn:
+            player_score += 1
+        else:
+            computer_score += 1
+
+    #else: if the person should get a new turn if they got a match correct
+        # switch turns
+    player_turn = not player_turn
 
 running = True
 while running:
@@ -194,14 +209,43 @@ while running:
 
     background_setup()
     board = board_setup()
-
+    
+    # computer's turn
+    if not player_turn and not first_guess:
+        pygame.time.delay(1500)
+        while True:
+            first_guess_num = random.randint(0, rows*cols-1)
+            print(spaces)
+            if first_guess_num not in correct[0].flatten():
+                first_guess = True
+                break
+        
+        # write first guess
+        square_text = subtitle_font.render(f'{spaces[first_guess_num]}', True, blue)
+        location = (first_guess_num // rows * 100 + 145, (first_guess_num % rows) * 100 + 141)
+        screen.blit(square_text, location)
+        pygame.display.flip()
+        pygame.time.delay(1000)
+        
+        while True:
+            second_guess_num = random.randint(0, rows*cols-1)
+            if second_guess_num != first_guess_num and second_guess_num not in correct[0].flatten():
+                second_guess = True
+                break
+        
+        # write second guess
+        square_text = subtitle_font.render(f'{spaces[second_guess_num]}', True, blue)
+        location = (second_guess_num // rows * 100 + 145, (second_guess_num % rows) * 100 + 141)
+        screen.blit(square_text, location)
+        pygame.display.flip()
+        pygame.time.delay(1000)
+    
     if first_guess and second_guess:
         check_guesses(first_guess_num, second_guess_num)
-        pygame.time.delay(1000)
+        pygame.time.delay(500)
         first_guess = False
         second_guess = False
-
-
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
              running = False
@@ -212,12 +256,10 @@ while running:
                 if button.collidepoint(event.pos) and not first_guess:
                     first_guess = True
                     first_guess_num = i
-                    # print(i)
                 
                 if button.collidepoint(event.pos) and not second_guess and first_guess and i != first_guess_num:
                     second_guess = True
                     second_guess_num = i
-                    # print(i)
 
     # mark first guess in blue
     if first_guess:
