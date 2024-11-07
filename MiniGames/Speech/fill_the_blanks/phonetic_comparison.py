@@ -54,7 +54,7 @@ def dynamic_phonetic_threshold(word1, word2):
         return 80 + (min_length)  # Stricter phonetic threshold for very different strings
 
 
-def dynamic_phonetic_comparision(word1, word2):
+def dynamic_phonetic_comparision(word1, word2, verbose=False):
     """
     Compare two words phonetically using Metaphone codes and a dynamic phonetic threshold.
 
@@ -69,18 +69,21 @@ def dynamic_phonetic_comparision(word1, word2):
     # Convert words to Metaphone codes for phonetic similarity
     word1_meta = phonetics.metaphone(word1)
     word2_meta = phonetics.metaphone(word2)
-    print(f"Metaphone codes: {word1_meta}, {word2_meta}")
-    print(f"Words: {word1}, {word2}")
+    
     
     # Get dynamic phonetic threshold
     phonetic_threshold = dynamic_phonetic_threshold(word1, word2)
-    print(f"Dynamic phonetic threshold: {phonetic_threshold}")
     
     # Phonetic comparison
     phonetic_similarity = fuzz.ratio(word1_meta, word2_meta)
-    print(f"Phonetic similarity: {phonetic_similarity}")
     
     # Return true if phonetic similarity exceeds the dynamic threshold
+    if verbose:
+        print(f"Metaphone codes: {word1_meta}, {word2_meta}")
+        print(f"Words: {word1}, {word2}")
+        print(f"Dynamic phonetic threshold: {phonetic_threshold}")
+        print(f"Phonetic similarity: {phonetic_similarity}")
+
 
     # Make a print like this : (word1, word2, string_similarity, phonetic_similarity, dynamic_threshold, is_similar)
     return phonetic_similarity >= phonetic_threshold

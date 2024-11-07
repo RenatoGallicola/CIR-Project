@@ -1,0 +1,9 @@
+pygame
+speechrecognition
+pydub
+jellyfish
+phonetics
+fuzzywuzzy
+matplotlib
+seaborn
+numpy
