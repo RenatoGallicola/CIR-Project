@@ -9,6 +9,8 @@ pygame.init()
 # define constants and variables
 WIDTH = 600
 HEIGHT = 600
+CARD_WIDTH = 80
+CARD_HEIGHT = 80
 black = (0,0,0) # RGB color value
 white = (255,255,255) # RGB color value
 grey = (120,120,120) # RGB color value
@@ -44,7 +46,11 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 # name window
 pygame.display.set_caption("Memory Match 1v1")
 
-
+# Load images
+card_images = [
+    pygame.transform.scale(pygame.image.load(r'MiniGames/StandardControls/images/' + f'{i}.png'), (CARD_WIDTH, CARD_HEIGHT))
+    for i in range(rows * cols // 2)
+]
 def background_setup():
     '''
     Set up background color, title and subtitle (instructions)
@@ -95,34 +101,23 @@ def board_setup():
     '''
     # retrieve global variables
     global rows, cols, correct
-
     board_list = []
 
-    # iterate for each column
     for i in range(cols):
-        # iterate for each row
         for j in range(rows):
-            square = pygame.draw.rect(screen, grey, [i * 100 + 110, j * 100 + 110, 80, 80], 0, 4)
-            
-            # saves every square in the matrix
+            square = pygame.draw.rect(screen, grey, [i * 100 + 110, j * 100 + 110, CARD_WIDTH, CARD_HEIGHT], 0, 4)
             board_list.append(square)
 
-            # write assigned number to each square
-            #sqaure_text = subtitle_font.render(f'{spaces[i * rows + j]}', True, black)
-            #screen.blit(sqaure_text, (i * 100 + 145, j * 100 + 141))
-
-    for r in range(rows):
-            for c in range(cols):
-                if correct[0][r][c] == 1:
-                    pygame.draw.rect(screen, green, [c * 100 + 108, r * 100 + 108, 84, 84], 3, 4)
-                    sqaure_text = subtitle_font.render(f'{spaces[c * rows + r]}', True, black)
-                    screen.blit(sqaure_text, (c * 100 + 145, r * 100 + 141))
+            if correct[0][j][i] == 1:
+                screen.blit(card_images[spaces[i * rows + j]], (i * 100 + 110, j * 100 + 110))
+            else:
+                pygame.draw.rect(screen, grey, [i * 100 + 110, j * 100 + 110, CARD_WIDTH, CARD_HEIGHT], 0, 4)
 
     return board_list
 
 def generate_board():
     '''
-    Assign each square a number from 0-len()
+    Assign random image to cards
 
     Arguments
     ----------
@@ -134,21 +129,26 @@ def generate_board():
 
     '''
     global options_list, spaces, used
+    options_list = list(range(rows * cols // 2)) * 2
+    random.shuffle(options_list)
+    spaces = options_list
 
-    for item in range(rows * cols // 2):
-        options_list.append(item)
+    #global options_list, spaces, used
+
+    #for item in range(rows * cols // 2):#
+        #options_list.append(item)
 
     # assign number to each sqaure
-    for item in range(rows * cols):
-        square = options_list[random.randint(0, len(options_list)-1)]
-        spaces.append(square)
+    #for item in range(rows * cols):
+        #square = options_list[random.randint(0, len(options_list)-1)]
+        #spaces.append(square)
         
         # keep track of what squares are already filled up
-        if square in used: # used: keeps track of single used pieces
-            used.remove(square)
-            options_list.remove(square)
-        else:
-            used.append(square)
+        #if square in used: # used: keeps track of single used pieces
+        #    used.remove(square)
+        #    options_list.remove(square)
+        #else:
+        #    used.append(square)
 
 def check_guesses(first, second):
     '''
@@ -177,14 +177,15 @@ def check_guesses(first, second):
         correct[0][row1][col1] = 1
         correct[0][row2][col2] = 1
 
-        for r in range(rows):
-            for c in range(cols):
-                if correct[0][r][c] == 1:
-                    pygame.draw.rect(screen, green, [c * 100 + 108, r * 100 + 108, 84, 84], 3, 4)
-                    sqaure_text = subtitle_font.render(f'{spaces[c * rows + r]}', True, black)
-                    screen.blit(sqaure_text, (c * 100 + 145, r * 100 + 141))
-        
+         # Display matched images instead of numbers
+        screen.blit(card_images[spaces[first]], (col1 * 100 + 110, row1 * 100 + 110))
+        screen.blit(card_images[spaces[second]], (col2 * 100 + 110, row2 * 100 + 110))
         pygame.display.flip()
+
+        # Draw a green outline around matched cards
+        pygame.draw.rect(screen, green, [col1 * 100 + 108, row1 * 100 + 108, 84, 84], 3, 4)
+        pygame.draw.rect(screen, green, [col2 * 100 + 108, row2 * 100 + 108, 84, 84], 3, 4)
+        pygame.time.delay(1000)
 
         matches += 1
         
@@ -214,11 +215,6 @@ while running:
         pygame.time.delay(1500)
         while True:
             first_guess_num = random.randint(0, rows*cols-1)
-            #print(spaces)
-            #if first_guess_num not in correct[0].flatten():
-            #    first_guess = True
-            #    break
-            # Calculate row and column for the first guess
             col1, row1 = divmod(first_guess_num, rows)
             
             # Check if the square is already matched
@@ -226,18 +222,14 @@ while running:
                 first_guess = True
                 break
         
-        # write first guess
-        square_text = subtitle_font.render(f'{spaces[first_guess_num]}', True, blue)
-        location = (first_guess_num // rows * 100 + 145, (first_guess_num % rows) * 100 + 141)
-        screen.blit(square_text, location)
+        # display first guess image
+        screen.blit(card_images[spaces[first_guess_num]], (col1 * 100 + 110, row1 * 100 + 110))
         pygame.display.flip()
         pygame.time.delay(1000)
         
         while True:
             second_guess_num = random.randint(0, rows*cols-1)
-            #if second_guess_num != first_guess_num and second_guess_num not in correct[0].flatten():
-            #    second_guess = True
-            #    break
+
             # Calculate row and column for the second guess
             col2, row2 = divmod(second_guess_num, rows)
             
@@ -246,10 +238,8 @@ while running:
                 second_guess = True
                 break
             
-        # write second guess
-        square_text = subtitle_font.render(f'{spaces[second_guess_num]}', True, blue)
-        location = (second_guess_num // rows * 100 + 145, (second_guess_num % rows) * 100 + 141)
-        screen.blit(square_text, location)
+        # display second guess image
+        screen.blit(card_images[spaces[second_guess_num]], (col2 * 100 + 110, row2 * 100 + 110))
         pygame.display.flip()
         pygame.time.delay(1000)
     
@@ -268,25 +258,25 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             for i in range(len(board)):
                 button = board[i]
+                # first guess
                 if button.collidepoint(event.pos) and not first_guess:
                     first_guess = True
                     first_guess_num = i
                 
+                #second guess
                 if button.collidepoint(event.pos) and not second_guess and first_guess and i != first_guess_num:
                     second_guess = True
                     second_guess_num = i
 
     # mark first guess in blue
     if first_guess:
-        sqaure_text = subtitle_font.render(f'{spaces[first_guess_num]}', True, blue)
-        location = (first_guess_num // rows * 100 + 145, (first_guess_num - (first_guess_num // rows * rows)) * 100 + 141)
-        screen.blit(sqaure_text, (location))
+        col1, row1 = divmod(first_guess_num, rows)
+        screen.blit(card_images[spaces[first_guess_num]], (col1 * 100 + 110, row1 * 100 + 110))
 
     # mark second guess in blue
     if second_guess:
-        sqaure_text = subtitle_font.render(f'{spaces[second_guess_num]}', True, blue)
-        location = (second_guess_num // rows * 100 + 145, (second_guess_num - (second_guess_num // rows * rows)) * 100 + 141)
-        screen.blit(sqaure_text, (location))
+        col2, row2 = divmod(second_guess_num, rows)
+        screen.blit(card_images[spaces[second_guess_num]], (col2 * 100 + 110, row2 * 100 + 110))
 
     # if all matches has been found and game is done
     if matches == rows*cols // 2:
