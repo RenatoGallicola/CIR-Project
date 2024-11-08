@@ -253,6 +253,7 @@ while running:
         pygame.display.flip()
         pygame.time.delay(1000)
     
+    # check guess after both cards are turned
     if first_guess and second_guess:
         check_guesses(first_guess_num, second_guess_num)
         pygame.time.delay(500)
@@ -263,6 +264,7 @@ while running:
         if event.type == pygame.QUIT:
              running = False
         
+        # when a card is choosen
         if event.type == pygame.MOUSEBUTTONDOWN:
             for i in range(len(board)):
                 button = board[i]
