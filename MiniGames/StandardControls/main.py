@@ -35,6 +35,7 @@ second_guess = False
 first_guess_num = None
 second_guess_num = None
 matches = 0
+game_over = False
 
 player_score = 0 
 computer_score = 0
@@ -72,18 +73,25 @@ def background_setup():
     screen.blit(title_text, (10, 20))
     
     # add text to subtitle
-    subtitle_text = subtitle_font.render("Instructions: Find the most matches before the guards does!", True, white)
+    subtitle_text = subtitle_font.render("Instructions: Find the most matches before the guard does!", True, white)
     screen.blit(subtitle_text, (10, 50))
     
     # define bottom menu
     bottom_menu = pygame.draw.rect(screen, black, [0, HEIGHT-100, WIDTH, 100])
     #board_space = pygame.draw.rect(screen, grey, [0, 100, WIDTH, HEIGHT-200])
 
+    # draw restart button
+    restart_button = pygame.draw.rect(screen, grey, [369, HEIGHT-85, 120, 60],0,5)
+    restart_text = title_font.render('Restart', True, white)
+    screen.blit(restart_text, (387,532))
+
     # show scores 
     player_score_text = subtitle_font.render(f"Player's Score: {player_score}", True, white)
     screen.blit(player_score_text, (20, HEIGHT-80))
     computer_score_text = subtitle_font.render(f"Guard's score: {computer_score}", True, white)
     screen.blit(computer_score_text, (20, HEIGHT-50))
+
+    return restart_button
 
 def board_setup():
     '''
@@ -207,7 +215,7 @@ while running:
         generate_board()
         new_board = False
 
-    background_setup()
+    restart = background_setup()
     board = board_setup()
     
     # computer's turn
@@ -246,7 +254,8 @@ while running:
     # check guess after both cards are turned
     if first_guess and second_guess:
         check_guesses(first_guess_num, second_guess_num)
-        pygame.time.delay(500)
+        pygame.time.delay(1000)
+        pygame.display.flip()
         first_guess = False
         second_guess = False
     
@@ -267,6 +276,19 @@ while running:
                 if button.collidepoint(event.pos) and not second_guess and first_guess and i != first_guess_num:
                     second_guess = True
                     second_guess_num = i
+            
+            # create restart button
+            if restart.collidepoint((event.pos)):
+                options_list = []
+                spaces = []
+                used = []
+                new_board = True
+                score = 0
+                matches = 0
+                correct = [np.zeros([rows, cols])]
+                first_guess = False
+                second_guess = False
+                game_over = False
 
     # mark first guess in blue
     if first_guess:
