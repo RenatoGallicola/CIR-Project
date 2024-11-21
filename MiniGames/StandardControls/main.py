@@ -203,9 +203,9 @@ def check_guesses(first, second):
         else:
             computer_score += 1
 
-    #else: if the person should get a new turn if they got a match correct
+    else: # if the person should get a new turn if they got a match correct
         # switch turns
-    player_turn = not player_turn
+        player_turn = not player_turn
 
 running = True
 while running:
