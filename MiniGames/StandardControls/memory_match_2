@@ -1,0 +1,410 @@
+# import libaries
+import pygame
+import random
+import numpy as np
+
+# initialize all modules
+pygame.init()
+
+# define constants and variables
+WIDTH = 600
+HEIGHT = 600
+CARD_WIDTH = 80
+CARD_HEIGHT = 80
+black = (0,0,0) # RGB color value
+white = (255,255,255) # RGB color value
+grey = (120,120,120) # RGB color value
+green = (0, 255, 0) # RGB color value
+blue = (0, 0, 255) # RGB color value
+
+fps = 60 # frames per second, how fast the game can run
+timer = pygame.time.Clock()
+
+title_font = pygame.font.Font("freesansbold.ttf", 24)
+subtitle_font = pygame.font.Font("freesansbold.ttf", 18)
+import numpy as np
+rows = 4 # number of squares in each row
+cols = 6 # number of squares in each column
+correct = np.zeros([rows, cols])
+print(correct.shape)
+options_list = []
+spaces = []
+used = []
+new_board = True
+first_guess = False
+second_guess = False
+third_guess = False
+first_guess_num = None
+second_guess_num = None
+third_guess_num = None
+matches = 0
+game_over = False
+
+player_score = 0 
+computer_score = 0
+player_turn = True # player starts
+memory = {}
+
+# create screen
+screen = pygame.display.set_mode([WIDTH, HEIGHT])
+
+# name window
+pygame.display.set_caption("Memory Match 1v1")
+
+# Load images
+card_images = [
+    pygame.transform.scale(pygame.image.load(r'MiniGames/StandardControls/images_2/' + f'{i}.png'), (CARD_WIDTH, CARD_HEIGHT))
+    for i in range(rows * cols // 3)
+]
+def background_setup():
+    '''
+    Set up background color, title and subtitle (instructions)
+
+    Arguments
+    ----------
+    -
+
+    Returns
+    -------
+    -
+
+    '''
+    # define top menu for title and subtitle
+    top_menu = pygame.draw.rect(screen, black, [0, 0, WIDTH, 100])
+    
+    # add text to title
+    title_text = title_font.render("Memory Match Game 1v1", True, white)
+    screen.blit(title_text, (10, 20))
+    
+    # add text to subtitle
+    subtitle_text = subtitle_font.render("Instructions: Find the most matches before the guard does!", True, white)
+    screen.blit(subtitle_text, (10, 50))
+    
+    # define bottom menu
+    bottom_menu = pygame.draw.rect(screen, black, [0, HEIGHT-100, WIDTH, 100])
+    #board_space = pygame.draw.rect(screen, grey, [0, 100, WIDTH, HEIGHT-200])
+
+    # draw restart button
+    restart_button = pygame.draw.rect(screen, grey, [369, HEIGHT-85, 120, 60],0,5)
+    restart_text = title_font.render('Restart', True, white)
+    screen.blit(restart_text, (387,532))
+
+    # show scores 
+    player_score_text = subtitle_font.render(f"Player's Score: {player_score}", True, white)
+    screen.blit(player_score_text, (20, HEIGHT-80))
+    computer_score_text = subtitle_font.render(f"Guard's score: {computer_score}", True, white)
+    screen.blit(computer_score_text, (20, HEIGHT-50))
+
+    return restart_button
+
+def board_setup():
+    '''
+    Assign each square with a number ranging 0-num_of_sqaures/2. 
+    Two squares will have the same number indicating a pair.
+
+    Arguments
+    ----------
+    -
+
+    Returns
+    -------
+    list of sqaures (cards)
+
+    '''
+    # retrieve global variables
+    global rows, cols, correct
+    board_list = []
+
+    for i in range(cols):
+        for j in range(rows):
+            square = pygame.draw.rect(screen, grey, [i * 100 + 10, j * 100 + 110, CARD_WIDTH, CARD_HEIGHT], 0, 4)
+            board_list.append(square)
+
+            if correct[j][i] == 1:
+                screen.blit(card_images[spaces[i * rows + j]], (i * 100 + 10, j * 100 + 110))
+            else:
+                pygame.draw.rect(screen, grey, [i * 100 + 10, j * 100 + 110, CARD_WIDTH, CARD_HEIGHT], 0, 4)
+    return board_list
+
+def generate_board():
+    '''
+    Assign random image to cards
+
+    Arguments
+    ----------
+    -
+
+    Returns
+    -------
+    -
+
+    '''
+    global options_list, spaces, used
+    options_list = list(range(rows * cols // 3)) * 3
+    random.shuffle(options_list)
+    spaces = options_list
+
+    #global options_list, spaces, used
+
+    #for item in range(rows * cols // 2):#
+        #options_list.append(item)
+
+    # assign number to each sqaure
+    #for item in range(rows * cols):
+        #square = options_list[random.randint(0, len(options_list)-1)]
+        #spaces.append(square)
+        
+        # keep track of what squares are already filled up
+        #if square in used: # used: keeps track of single used pieces
+        #    used.remove(square)
+        #    options_list.remove(square)
+        #else:
+        #    used.append(square)
+
+def check_guesses(first, second, third):
+    '''
+    Check if the two guess are macthing 
+
+    Arguments
+    ----------
+    first: int
+    second: int
+
+    Returns
+    -------
+    -
+
+    '''
+    global spaces, correct, matches, player_score, computer_score, player_turn
+
+    # identifying position of the sqaure that is clicked on
+    col1 = first // rows
+    col2 = second // rows
+    col3 = third // rows
+    row1 = first - (first // rows * rows)
+    row2 = second - (second // rows * rows)
+    row3 = third - (third // rows * rows)
+    
+    
+    if spaces[first] == spaces[second] == spaces[third]:
+        # update correct matrix to identify correct guess
+        correct[row1][col1] = 1
+        correct[row2][col2] = 1
+        correct[row3][col3] = 1
+
+        # Draw matched images
+        for (col, row, guess) in [(col1, row1, first), (col2, row2, second), (col3, row3, third)]:
+            screen.blit(card_images[spaces[guess]], (col * 100 + 10, row * 100 + 110))
+            #pygame.draw.rect(screen, green, [col * 100 + 8, row * 100 + 108, 84, 84], 3, 4)
+
+        pygame.time.delay(1000)
+
+        matches += 1
+        
+        # Update scores
+        if player_turn:
+            player_score += 1
+        else:
+            computer_score += 1
+
+        # Remove matched cards from memory
+        memory.pop((col1, row1), None)
+        memory.pop((col2, row2), None)
+        memory.pop((col3, row3), None)
+
+    else:
+        # Remember the positions if unmatched
+        memory[(col1, row1)] = first
+        memory[(col2, row2)] = second
+        memory[(col3, row3)] = third
+
+
+        # switch turns
+        player_turn = not player_turn
+
+def computers_turn():
+    global first_guess_num, second_guess_num, third_guess_num, first_guess, second_guess, third_guess, rows, cols, memory, player_turn
+
+    use_memory = (random.random() < 0.35)
+    print(f'Using memory: {use_memory}')
+
+    if use_memory:
+        # extracting values to compare
+        values = list(memory.values())
+
+        # Flag to check if at least one pair of values match
+        match_found = False
+
+        # Check for at least one match
+        for i in range(len(values)):
+            for j in range(i + 1, len(values)):
+                for k in range(j + 1, len(values)):
+                    if (spaces[values[i]] == spaces[values[j]] == spaces[values[k]]) and (len(set([values[i], values[j], values[k]])) == 3):
+                        first_guess_num = values[i]
+                        second_guess_num = values[j]
+                        third_guess_num = values[k]
+                        print(spaces[first_guess_num], spaces[second_guess_num], spaces[third_guess_num])
+                        print(first_guess_num, second_guess_num, third_guess_num)
+                        first_guess, second_guess, third_guess, match_found = True, True, True, True
+                        break
+
+            if match_found:
+                col1, row1 = divmod(first_guess_num, rows)
+                screen.blit(card_images[spaces[first_guess_num]], (col1 * 100 + 10, row1 * 100 + 110))
+                pygame.display.flip()
+                pygame.time.delay(1000)
+
+                col2, row2 = divmod(second_guess_num, rows)
+                screen.blit(card_images[spaces[second_guess_num]], (col2 * 100 + 10, row2 * 100 + 110))
+                pygame.display.flip()
+                pygame.time.delay(1000)
+                print('match found')
+                print(col1, row1, col2, row2)
+                
+                col3, row3 = divmod(third_guess_num, rows)
+                screen.blit(card_images[spaces[third_guess_num]], (col3 * 100 + 10, row3 * 100 + 110))
+                pygame.display.flip()
+                pygame.time.delay(1000)
+                
+                use_memory = False
+                memory.pop((col1, row1), None)
+                memory.pop((col2, row2), None)
+                memory.pop((col3, row3), None)
+                pygame.display.flip()
+                return
+
+        if not match_found:
+            print('no match')
+            print(match_found)
+
+    if use_memory == False or (use_memory == True and match_found == False):
+        print(f'draw random')
+        while True:
+                first_guess_num = random.randint(0, rows*cols-1)
+                col1, row1 = divmod(first_guess_num, rows)
+                
+                # Check if the square is already matched
+                if correct[row1][col1] == 0:
+                    first_guess = True
+                    break
+            
+        # display first guess image
+        screen.blit(card_images[spaces[first_guess_num]], (col1 * 100 + 10, row1 * 100 + 110))
+        pygame.display.flip()
+        pygame.time.delay(1000)
+            
+        while True:
+            second_guess_num = random.randint(0, rows*cols-1)
+
+            # Calculate row and column for the second guess
+            col2, row2 = divmod(second_guess_num, rows)
+            
+            # Ensure the second guess is different from the first and is not already matched
+            if second_guess_num != first_guess_num and correct[row2][col2] == 0:
+                second_guess = True
+                break
+            
+        # display second guess image
+        screen.blit(card_images[spaces[second_guess_num]], (col2 * 100 + 10, row2 * 100 + 110))
+        pygame.display.flip()
+        pygame.time.delay(1000)
+
+        # Third card draw
+        while True:
+            third_guess_num = random.randint(0, len(spaces) - 1)
+            print(third_guess_num)
+
+            col3, row3 = divmod(third_guess_num, rows)
+            print(f'col3: {col3}, row3:{row3}')
+
+            if third_guess_num not in [first_guess_num, second_guess_num] and correct[row3][col3] == 0:
+                third_guess = True
+                break
+
+        # Display the third guess
+        screen.blit(card_images[spaces[third_guess_num]], (col3 * 100 + 10, row3 * 100 + 110))
+        pygame.display.flip()
+        pygame.time.delay(1000)
+    
+running = True
+while running:
+    timer.tick(fps)
+    screen.fill(white)
+    if new_board:
+        generate_board()
+        new_board = False
+
+    restart = background_setup()
+    board = board_setup()
+    
+    # computer's turn
+    if not player_turn and not first_guess:
+        pygame.time.delay(1500)
+        computers_turn()
+    
+    # check guess after both cards are turned
+    if first_guess and second_guess and third_guess:
+        check_guesses(first_guess_num, second_guess_num, third_guess_num)
+        pygame.time.delay(1000)
+        pygame.display.flip()
+        first_guess = False
+        second_guess = False
+        third_guess = False
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+             running = False
+        
+        # when a card is choosen
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for i, button in enumerate(board):
+                if button.collidepoint(event.pos):
+                    if not first_guess:
+                        first_guess, first_guess_num = True, i
+                    elif not second_guess and i not in [first_guess_num]:
+                        second_guess, second_guess_num = True, i
+                    elif not third_guess and i not in [first_guess_num, second_guess_num]:
+                        third_guess, third_guess_num = True, i
+            print(first_guess_num,second_guess_num,third_guess_num)
+
+            # create restart button
+            if restart.collidepoint((event.pos)):
+                options_list = []
+                spaces = []
+                used = []
+                new_board = True
+                score = 0
+                matches = 0
+                correct = np.zeros([rows, cols])
+                first_guess = False
+                second_guess = False
+                third_guess = False
+                game_over = False
+                memory = {}
+                player_score = 0
+                computer_score = 0
+                player_turn = True
+
+
+    # mark first guess
+    if first_guess:
+        col1, row1 = divmod(first_guess_num, rows)
+        screen.blit(card_images[spaces[first_guess_num]], (col1 * 100 + 10, row1 * 100 + 110))
+
+    # mark second guess
+    if second_guess:
+        col2, row2 = divmod(second_guess_num, rows)
+        screen.blit(card_images[spaces[second_guess_num]], (col2 * 100 + 10, row2 * 100 + 110))
+
+    if third_guess:
+        col3, row3 = divmod(third_guess_num, rows)
+        screen.blit(card_images[spaces[third_guess_num]], (col3 * 100 + 10, row3 * 100 + 110))
+
+    # if all matches has been found and game is done
+    if matches == rows*cols // 3:
+        game_finish = pygame.draw.rect(screen, black, [10, HEIGHT - 350, WIDTH - 20, 50], 0, 5)
+        game_finish_text = title_font.render("Congrats! You completed the game", True, white)
+        screen.blit(game_finish_text, (100, HEIGHT - 341))
+
+    pygame.display.flip()
+pygame.quit()

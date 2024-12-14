@@ -49,7 +49,7 @@ pygame.display.set_caption("Memory Match 1v1")
 
 # Load images
 card_images = [
-    pygame.transform.scale(pygame.image.load(r'MiniGames/StandardControls/images/' + f'{i}.png'), (CARD_WIDTH, CARD_HEIGHT))
+    pygame.transform.scale(pygame.image.load(r'MiniGames/StandardControls/images_1/' + f'{i}.png'), (CARD_WIDTH, CARD_HEIGHT))
     for i in range(rows * cols // 2)
 ]
 def background_setup():
