@@ -141,23 +141,6 @@ def generate_board():
     random.shuffle(options_list)
     spaces = options_list
 
-    #global options_list, spaces, used
-
-    #for item in range(rows * cols // 2):#
-        #options_list.append(item)
-
-    # assign number to each sqaure
-    #for item in range(rows * cols):
-        #square = options_list[random.randint(0, len(options_list)-1)]
-        #spaces.append(square)
-        
-        # keep track of what squares are already filled up
-        #if square in used: # used: keeps track of single used pieces
-        #    used.remove(square)
-        #    options_list.remove(square)
-        #else:
-        #    used.append(square)
-
 def check_guesses(first, second):
     '''
     Check if the two guess are macthing 
