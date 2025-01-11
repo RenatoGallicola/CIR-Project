@@ -41,24 +41,38 @@ class HandGesture(object):
         show_fps = False, 
         show_bounding_box = True, 
         show_info_box = True, 
+        show_landmarks = False,
+        show_hand_label = True,
         enable_csv_update = False,
         enable_esc_exit = None,
-        register_gesture_unit = 0
+        register_gesture_unit = 0,
+        cap = cv.VideoCapture(0),
+        valid_gestures = {"Fist":"Fist", "OK":"OK", "Index":"Index", "ThumbsUp":"ThumbsUp", "Peace":"Peace", "Salute":"Salute", "Scout":"Scout", "StarTrek":"StarTrek", "Open":"Open", "ThumbsDown":"ThumbsDown", "Neutral":"Neutral", "MammaMia":"MammaMia"}
     ):
         self.__num_hands = num_hands
         self.__enable_pointer = enable_pointer
         self.__show_fps = show_fps 
         self.__show_bounding_box = show_bounding_box 
         self.__show_info_box = show_info_box 
+        self.__show_landmarks = show_landmarks
+        self.__show_hand_label = show_hand_label
         self.__enable_csv_update = enable_csv_update
         self.__enable_esc_exit = enable_esc_exit
         self.__register_gesture_unit = register_gesture_unit
+        self.__cap = cap
+        self.__valid_gesture = valid_gestures
 
         self.__history_length = 16
-        self.__currentGesture = {"Right": None, "Left": None}
+        if self.__num_hands == 2:
+            self.__current_gesture = {"Right": None, "Left": None}
+        else:
+            self.__current_gesture = None
         self.__gesture_lock = threading.Lock()
         self.__stop_flag = threading.Event()
         self.__is_running = False
+        self.__current_frame = None
+        self.__frame_lock = threading.Lock()
+        self.__sleep_time = 0
 
     def __get_args():
         parser = argparse.ArgumentParser()
@@ -320,18 +334,18 @@ class HandGesture(object):
 
         return image
 
-    def __draw_info_box(image, box, handedness, hand_sign_text, pointer_gesture_text, enable_pointer, is_pointer):
-
-        info_text = handedness.classification[0].label[0:]
-        if hand_sign_text != "":
-            info_text = info_text + ':' + hand_sign_text
-        text_size = cv.getTextSize(info_text, cv.FONT_HERSHEY_SIMPLEX, 0.6, 1)[0]
-        text_margin_left = 5
-        text_margin_bottom = 10
-        label_width = max(text_size[0] + text_margin_left * 2, box[2] - box[0])
-        label_height = text_size[1] + text_margin_bottom * 2
-        cv.rectangle(image, (box[0], box[1]), (box[0] + label_width, box[1] - label_height), (0, 0, 0), -1)
-        cv.putText(image, info_text, (box[0] + text_margin_left, box[1] - text_margin_bottom), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
+    def __draw_info_box(self, image, box, handedness, hand_sign_text, pointer_gesture_text, enable_pointer, is_pointer):
+        if hand_sign_text in self.__valid_gesture:
+            info_text = self.__valid_gesture.get(hand_sign_text)
+            if self.__show_hand_label:
+                info_text = handedness.classification[0].label[0:] + ':' + info_text
+            text_size = cv.getTextSize(info_text, cv.FONT_HERSHEY_SIMPLEX, 0.6, 1)[0]
+            text_margin_left = 5
+            text_margin_bottom = 10
+            label_width = max(text_size[0] + text_margin_left * 2, box[2] - box[0])
+            label_height = text_size[1] + text_margin_bottom * 2
+            cv.rectangle(image, (box[0], box[1]), (box[0] + label_width, box[1] - label_height), (0, 0, 0), -1)
+            cv.putText(image, info_text, (box[0] + text_margin_left, box[1] - text_margin_bottom), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv.LINE_AA)
 
         if enable_pointer and is_pointer:
             if pointer_gesture_text != "":
@@ -363,17 +377,46 @@ class HandGesture(object):
     def __set_current_gesture(self, gesture):
         self.__gesture_lock.acquire()
         try:
-            self.__currentGesture["Right"] = gesture["Right"]
-            self.__currentGesture["Left"] = gesture["Left"]
+            if self.__num_hands == 2:
+                # self.__current_gesture["Right"] = gesture["Right"]
+                # self.__current_gesture["Left"] = gesture["Left"]
+                if gesture["Right"] in self.__valid_gesture:
+                    self.__current_gesture["Right"] = self.__valid_gesture[gesture["Right"]]
+                else:
+                    self.__current_gesture["Right"] = None
+                if gesture["Left"] in self.__valid_gesture:
+                    self.__current_gesture["Left"] = self.__valid_gesture[gesture["Left"]]
+                else:
+                    self.__current_gesture["Left"] = None
+            else:
+                # self.__current_gesture = gesture
+                if gesture in self.__valid_gesture:
+                    self.__current_gesture = self.__valid_gesture[gesture]
+                else:
+                    self.__current_gesture = None
         finally:
             self.__gesture_lock.release()
 
     def get_current_gesture(self):
         self.__gesture_lock.acquire()
         try:
-            return self.__currentGesture
+            return self.__current_gesture
         finally:
             self.__gesture_lock.release()
+
+    def __set_current_frame(self, frame):
+        self.__frame_lock.acquire()
+        try:
+            self.__current_frame = frame
+        finally:
+            self.__frame_lock.release()
+
+    def get_current_frame(self):
+        self.__frame_lock.acquire()
+        try:
+            return self.__current_frame
+        finally:
+            self.__frame_lock.release()
 
     def stop(self):
         self.__stop_flag.set()
@@ -387,18 +430,17 @@ class HandGesture(object):
         # Argument parsing
         args = HandGesture.__get_args()
 
-        cap_device = args.device
-        cap_width = args.width
-        cap_height = args.height
-
         use_static_image_mode = args.use_static_image_mode
         min_detection_confidence = args.min_detection_confidence
         min_tracking_confidence = args.min_tracking_confidence
 
-        # Load camera
-        cap = cv.VideoCapture(cap_device)
-        cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
-        cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+        # Camera should be managed by the caller
+        # cap_device = args.device
+        # cap_width = args.width
+        # cap_height = args.height
+        # cap = cv.VideoCapture(cap_device)
+        # cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
+        # cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
 
         # Pointer works with only one hand
         if self.__enable_pointer:
@@ -441,6 +483,8 @@ class HandGesture(object):
         while True and not self.__stop_flag.is_set():
             if self.__show_fps:
                 fps = FpsCount.get()
+            else:
+                fps = 0 # Not showing fps
 
             # Close camera
             key = cv.waitKey(10)
@@ -453,7 +497,7 @@ class HandGesture(object):
                 number, mode = -1, 0
 
             # Frame capture
-            ret, image = cap.read()
+            ret, image = self.__cap.read()
             if not ret:
                 break
             image = cv.flip(image, 1)
@@ -465,8 +509,10 @@ class HandGesture(object):
             results = hands.process(image)
             image.flags.writeable = True
 
-            temp_gesture = {"Right": None, "Left": None}
-            
+            if self.__num_hands == 2:
+                temp_gesture = {"Right": None, "Left": None}
+            else:
+                temp_gesture = None
             if results.multi_hand_landmarks is not None:
                 for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
                     # Bounding box calculation
@@ -510,7 +556,8 @@ class HandGesture(object):
                     if self.__show_bounding_box:
                         debug_image = HandGesture.__draw_bounding_box(debug_image, bound_box)
 
-                    debug_image = HandGesture.__draw_landmarks(debug_image, landmark_list)
+                    if self.__show_landmarks:
+                        debug_image = HandGesture.__draw_landmarks(debug_image, landmark_list)
                     
                     is_pointer = hand_sign_id == HandGesture.__get_pointer_idx()
 
@@ -520,7 +567,7 @@ class HandGesture(object):
                         history_label = None
 
                     if self.__show_info_box:
-                        debug_image = HandGesture.__draw_info_box(
+                        debug_image = self.__draw_info_box(
                             debug_image,
                             bound_box,
                             handedness,
@@ -529,7 +576,10 @@ class HandGesture(object):
                             self.__enable_pointer,
                             is_pointer
                         )
-                    temp_gesture[handedness.classification[0].label[0:]] = keypoint_classifier_labels[hand_sign_id]
+                    if self.__num_hands == 2:
+                        temp_gesture[handedness.classification[0].label[0:]] = keypoint_classifier_labels[hand_sign_id]
+                    else:
+                        temp_gesture = keypoint_classifier_labels[hand_sign_id]
             else:
                 if self.__enable_pointer:
                     point_history.append([0, 0])
@@ -540,12 +590,17 @@ class HandGesture(object):
             if self.__show_info_box:
                 debug_image = HandGesture.__draw_info(debug_image, fps, mode, number, self.__show_fps)
 
-            cv.imshow('Hand Gesture Recognition', debug_image)
+            # Frame should be managed by the caller
+            # cv.imshow('Hand Gesture Recognition', debug_image)
 
             self.__set_current_gesture(temp_gesture)
+            self.__set_current_frame(debug_image)
 
-        cap.release()
-        cv.destroyAllWindows()
+            time.sleep(self.__sleep_time)
+
+        # Camera and window should be managed by the caller
+        # self.__cap.release()
+        # cv.destroyAllWindows()
 
         self.__is_running = False
         self.stop() # Stop the thread when the loop ends due to a esc key press
