@@ -25,6 +25,7 @@ class RockPaperScissorsStandard:
         self.__dialogue_frame_rect = None
         self.__font_size = 36
         self.__thread_list = []
+        self.__curr_score = [0, 0]
     
     def __manage_thread(self):
         for t in self.__thread_list:
@@ -33,13 +34,13 @@ class RockPaperScissorsStandard:
     def __launch_hand_gesture(self):
         self.__cap = cv2.VideoCapture(0)
         num_hands = 1 
-        show_fps = True
+        show_fps = False
         show_bounding_box = True
         show_info_box = True
         show_hand_label = False
         valid_gestures = {'Fist':'Rock', 'Open':'Paper', 'Peace':'Scissors'}
 
-        self.__hand_gesture = HandGesture(num_hands=num_hands, show_fps=show_fps, show_bounding_box=show_bounding_box, show_info_box=show_info_box, show_hand_label=show_hand_label,cap=self.__cap, valid_gestures=valid_gestures)
+        self.__hand_gesture = HandGesture(num_hands=num_hands, show_bounding_box=show_bounding_box, show_fps=show_fps, show_info_box=show_info_box, show_hand_label=show_hand_label,cap=self.__cap, valid_gestures=valid_gestures)
 
         thread_hand = threading.Thread(target=self.__hand_gesture.start)
         thread_hand.start()
@@ -62,15 +63,6 @@ class RockPaperScissorsStandard:
 
         self.__window.blit(frame_surface, (self.__width - camera_width, 0))
 
-    def __dialogue_text(self,text):
-        font = pygame.font.Font(None, self.__font_size)
-        text_color = pygame.Color("#5C4B51")
-        for i,line in enumerate(text):
-            text_surface = font.render(line, True, text_color)
-            offset = len(text)//2 + 1 - (i+1)
-            text_rect = text_surface.get_rect(center=(self.__dialogue_frame_rect.centerx, self.__dialogue_frame_rect.centery - offset*self.__font_size))
-            self.__window.blit(text_surface, text_rect)
-
     def __draw_dialogue_frame(self):
         dialogue_frame = pygame.image.load("Assets/dialogue_frame.png")
         frame_scale_factor = self.__width / dialogue_frame.get_width()
@@ -79,20 +71,57 @@ class RockPaperScissorsStandard:
         self.__dialogue_frame_rect = dialogue_frame.get_rect(topleft=(0, self.__height-dialogue_frame.get_height()-bottom_offset))
         self.__window.blit(dialogue_frame, self.__dialogue_frame_rect)
 
+    def __draw_dialogue_text(self,text):
+        font = pygame.font.Font(None, self.__font_size)
+        text_color = pygame.Color("#5C4B51")
+        for i,line in enumerate(text):
+            text_surface = font.render(line, True, text_color)
+            offset = len(text)//2 + 1 - (i+1)
+            text_rect = text_surface.get_rect(center=(self.__dialogue_frame_rect.centerx, self.__dialogue_frame_rect.centery - offset*self.__font_size))
+            self.__window.blit(text_surface, text_rect)
+
+    def __draw_score(self, score):
+        if score == 1:
+            self.__curr_score[0] += 1
+        elif score == -1:
+            self.__curr_score[1] += 1
+        font = pygame.font.Font(None, 2*self.__font_size)
+        text_color = pygame.Color("#5C4B51")
+        text = "Score: " + str(self.__curr_score[0]) + " - " + str(self.__curr_score[1])
+        text_surface = font.render(text, True, text_color)
+        text_rect = text_surface.get_rect(center=(self.__width/2, self.__height/2))
+
+        outer_frame_color = pygame.Color("#F06060")
+        outer_frame_offset = 35
+        rect_width, rect_height = text_rect.width + outer_frame_offset, text_rect.height + outer_frame_offset
+        rect_x, rect_y = text_rect.centerx - rect_width // 2, text_rect.centery - rect_height // 2
+        pygame.draw.rect(self.__window, outer_frame_color, (rect_x, rect_y, rect_width, rect_height))
+
+        inner_frame_color = pygame.Color("#F2EBBF")
+        inner_rect_margin = 5
+        inner_rect_x = rect_x + inner_rect_margin
+        inner_rect_y = rect_y + inner_rect_margin
+        inner_rect_width = rect_width - 2 * inner_rect_margin
+        inner_rect_height = rect_height - 2 * inner_rect_margin
+        pygame.draw.rect(self.__window, inner_frame_color, (inner_rect_x, inner_rect_y, inner_rect_width, inner_rect_height))
+
+        self.__window.blit(text_surface, text_rect)
+
     def __compute_outcome(self, move, opp_move):
         if move == "Rock" and opp_move == "Scissors" or move == "Paper" and opp_move == "Rock" or move == "Scissors" and opp_move == "Paper":
-            return "Win"
+            return "Win", 1
         elif move == "Rock" and opp_move == "Paper" or move == "Paper" and opp_move == "Scissors" or move == "Scissors" and opp_move == "Rock":
-            return "Lose"
+            return "Lose", -1
         else:
-            return "Tie"
+            return "Tie", 0
 
     def __dialogue_manager(self):
         curr_count = 3
+        self.__draw_score(0)
         while True:
             if curr_count > 0:
                 self.__draw_dialogue_frame()
-                self.__dialogue_text(str(curr_count))
+                self.__draw_dialogue_text(str(curr_count))
                 curr_count -= 1
                 pygame.time.wait(1000)
             else:
@@ -101,9 +130,11 @@ class RockPaperScissorsStandard:
                 if move is None:
                     move = "Invalid move"
                 opp_move = random.choice(["Rock", "Paper", "Scissors"])
-                self.__dialogue_text(["Your move: " + move,
+                outcome, score = self.__compute_outcome(move, opp_move)
+                self.__draw_dialogue_text(["Your move: " + move,
                                       "Opponent's move: " + opp_move,
-                                      "You " + self.__compute_outcome(move, opp_move)])
+                                      "You " + outcome + "!",])
+                self.__draw_score(score)
                 curr_count = 3
                 pygame.time.wait(2000)
 

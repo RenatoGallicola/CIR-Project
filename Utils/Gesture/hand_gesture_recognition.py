@@ -483,6 +483,8 @@ class HandGesture(object):
         while True and not self.__stop_flag.is_set():
             if self.__show_fps:
                 fps = FpsCount.get()
+            else:
+                fps = 0 # Not showing fps
 
             # Close camera
             key = cv.waitKey(10)

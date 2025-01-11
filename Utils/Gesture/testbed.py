@@ -12,7 +12,7 @@ def quit_testbed(hand_gesture):
 
 num_hands=2 # Set the number of hands to be detected
 enable_pointer=False # Set to True to enable the pointer gestures
-show_fps=True # Set to True to show the FPS on the screen
+show_fps=False # Set to True to show the FPS on the screen
 show_bounding_box=True # Set to True to show the bounding box around the hands
 show_info_box=True # Set to True to show the information box on the screen
 enable_csv_update = True # Set to True to update the csv file with the gesture data
