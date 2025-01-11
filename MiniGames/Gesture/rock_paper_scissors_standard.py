@@ -67,7 +67,7 @@ class RockPaperScissorsStandard:
         dialogue_frame = pygame.image.load("Assets/dialogue_frame.png")
         frame_scale_factor = self.__width / dialogue_frame.get_width()
         dialogue_frame = pygame.transform.scale(dialogue_frame, (frame_scale_factor*dialogue_frame.get_width(), frame_scale_factor*dialogue_frame.get_height()))
-        bottom_offset = 10
+        bottom_offset = 30
         self.__dialogue_frame_rect = dialogue_frame.get_rect(topleft=(0, self.__height-dialogue_frame.get_height()-bottom_offset))
         self.__window.blit(dialogue_frame, self.__dialogue_frame_rect)
 
