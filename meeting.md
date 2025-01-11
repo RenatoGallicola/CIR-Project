@@ -1,0 +1,1 @@
+For each input type, we should try to create the backbone of the input, like the speech recognition should be fully working, same with mediapipe and then be put into the utils folder  
