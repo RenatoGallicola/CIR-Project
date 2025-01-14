@@ -1,0 +1,15 @@
+[remap]
+
+importer="dialogue_manager_compiler_13"
+type="Resource"
+uid="uid://c3t1sjl8370i7"
+path="res://.godot/imported/wizard_red.dialogue-473568ed908e4ebba9af66f6456914da.tres"
+
+[deps]
+
+source_file="res://dialogues/wizard_red.dialogue"
+dest_files=["res://.godot/imported/wizard_red.dialogue-473568ed908e4ebba9af66f6456914da.tres"]
+
+[params]
+
+defaults=true

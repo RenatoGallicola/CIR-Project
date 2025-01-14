@@ -1,0 +1,37 @@
+~ start
+set guard_started = true
+Guard: Hold it right there, prince. If you want to pass, you’ll have to defeat me. No one gets by the Cutter of Fate without proving their worth!
+Guard: I’ll give you a hint... I love cutting things. Snipping, slicing, chopping—nothing beats the thrill of a clean cut! Think you’re up for the challenge?
+Guard: Come on! Don’t tell me you’re scared already. Let’s see what you’ve got!
+=> countdown
+
+~ countdown
+Guard: 3...2...1...[next=auto]
+=> result
+	
+~ result
+set processing = true
+: Prince played: {{player_move}}
+	Guard played: {{guard_move}}
+	
+	Prince {{outcome}} 
+if round_score == 1
+	set player_score = player_score + 1
+else if round_score == -1
+	set guard_score = guard_score + 1
+set processing = false
+if player_score == winner_score:
+	Prince wins the match!
+	set guard_finished = true
+	set player_score = 0
+	set guard_score = 0
+	Guard: Impossible! You... you beat me? Hah! I guess even the sharpest blade has its limits. Fine, prince, you win this time. Go on, pass... but don’t think I’ll make it this easy next time!
+	=> END
+if guard_score == winner_score:
+	Prince loses the match...
+	Guard: Ha! I win! Did you really think you could outsmart the Cutter of Fate? Guess what? It’s over for you, prince. Back to where you started! Maybe next time, you’ll come prepared.
+	- Rematch
+		set player_score = 0
+		set guard_score = 0
+		=> start	
+=> countdown

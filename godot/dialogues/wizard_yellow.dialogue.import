@@ -1,0 +1,15 @@
+[remap]
+
+importer="dialogue_manager_compiler_13"
+type="Resource"
+uid="uid://dc4ebeojhblay"
+path="res://.godot/imported/wizard_yellow.dialogue-d4ad7cf044cc50d0c2c8caba6a40cb3c.tres"
+
+[deps]
+
+source_file="res://dialogues/wizard_yellow.dialogue"
+dest_files=["res://.godot/imported/wizard_yellow.dialogue-d4ad7cf044cc50d0c2c8caba6a40cb3c.tres"]
+
+[params]
+
+defaults=true

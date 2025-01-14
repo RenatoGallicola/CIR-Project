@@ -1,0 +1,15 @@
+[remap]
+
+importer="dialogue_manager_compiler_13"
+type="Resource"
+uid="uid://bhc04tpje7c8j"
+path="res://.godot/imported/wizard_white.dialogue-18629c584925d2317c1b344c047488f3.tres"
+
+[deps]
+
+source_file="res://dialogues/wizard_white.dialogue"
+dest_files=["res://.godot/imported/wizard_white.dialogue-18629c584925d2317c1b344c047488f3.tres"]
+
+[params]
+
+defaults=true

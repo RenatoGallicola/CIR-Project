@@ -1,0 +1,5 @@
+~ start
+set wizard_started = true
+Yellow Wizard: Round and small, with stories told, in pockets I jingle, both young and old. What am I?
+set wizard_finished = true
+=> END

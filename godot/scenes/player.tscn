@@ -1,0 +1,123 @@
+[gd_scene load_steps=13 format=3 uid="uid://iy47stfigdb3"]
+
+[ext_resource type="Texture2D" uid="uid://cc6qnygywexbh" path="res://assets/sprites/knight.png" id="1_sbto6"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_sc0x4"]
+[ext_resource type="Script" path="res://scripts/hand_gesture.gd" id="3_hgtut"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y1ugq"]
+atlas = ExtResource("1_sbto6")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c727o"]
+atlas = ExtResource("1_sbto6")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ihctk"]
+atlas = ExtResource("1_sbto6")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h1m3n"]
+atlas = ExtResource("1_sbto6")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8rm5c"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y1ugq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c727o")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ihctk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h1m3n")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 6.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o1dia"]
+size = Vector2(13, 19)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gb47a"]
+size = Vector2(13, 19)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_kk51x"]
+load_path = "res://.godot/imported/camera_frame.png-44ee019da6316f3b8d26738b8ae7a5f2.ctex"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1e2mo"]
+bg_color = Color(0.443137, 0.254902, 0.231373, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.196078, 0.168627, 0.156863, 1)
+border_blend = true
+corner_radius_top_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0.858824, 0.643137, 0.388235, 1)
+shadow_size = 2
+shadow_offset = Vector2(1, 1)
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_sc0x4")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -12)
+sprite_frames = SubResource("SpriteFrames_8rm5c")
+animation = &"idle"
+autoplay = "idle"
+frame_progress = 0.562472
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-0.5, -9.5)
+shape = SubResource("RectangleShape2D_o1dia")
+
+[node name="ActionableFinder" type="Area2D" parent="."]
+position = Vector2(-0.5, -9.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActionableFinder"]
+shape = SubResource("RectangleShape2D_gb47a")
+debug_color = Color(0.79106, 0.0860995, 1, 0.42)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(36, -31)
+zoom = Vector2(4, 4)
+
+[node name="HandGesture" type="TextureRect" parent="Camera2D"]
+offset_left = -2.67029e-05
+offset_top = -72.9999
+offset_right = 400.0
+offset_bottom = 227.0
+scale = Vector2(0.331674, 0.331674)
+expand_mode = 3
+stretch_mode = 4
+script = ExtResource("3_hgtut")
+
+[node name="CameraFrame" type="Sprite2D" parent="Camera2D"]
+visible = false
+position = Vector2(65.9999, -24)
+scale = Vector2(0.355, 0.346666)
+texture = SubResource("CompressedTexture2D_kk51x")
+
+[node name="ScorePanel" type="Panel" parent="Camera2D"]
+visible = false
+offset_left = -133.0
+offset_top = -73.0
+offset_right = -44.0
+offset_bottom = -21.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_1e2mo")
+
+[node name="ScoreLabel" type="Label" parent="Camera2D/ScorePanel"]
+visible = false
+layout_mode = 0
+offset_right = 89.0
+offset_bottom = 52.0
+text = "Score
+0 - 0"
+horizontal_alignment = 1
+vertical_alignment = 1

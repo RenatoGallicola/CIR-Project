@@ -1,0 +1,5 @@
+~ start
+set wizard_started = true
+Green Wizard: I gleam like treasure, bright and rare, found in the castle’s ancient lair. A green gem, precious and fine, what am I?
+set wizard_finished = true
+=> END

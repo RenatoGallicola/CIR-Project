@@ -1,0 +1,72 @@
+[gd_scene load_steps=12 format=3 uid="uid://d037m7ulx1bsu"]
+
+[ext_resource type="Script" path="res://scripts/npc.gd" id="1_0bqln"]
+[ext_resource type="Texture2D" uid="uid://olj40dn4mjfa" path="res://assets/sprites/guard_idle_shaded.png" id="2_3aiw2"]
+[ext_resource type="PackedScene" uid="uid://dxquwe1nnl7i2" path="res://scenes/actionable.tscn" id="3_ccc30"]
+[ext_resource type="Resource" uid="uid://ct61ceht4f8vs" path="res://dialogues/guard.dialogue" id="4_d5db5"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nl7fl"]
+atlas = ExtResource("2_3aiw2")
+region = Rect2(0, 0, 14, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oc3ka"]
+atlas = ExtResource("2_3aiw2")
+region = Rect2(14, 0, 14, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_seaso"]
+atlas = ExtResource("2_3aiw2")
+region = Rect2(28, 0, 14, 44)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7u7e0"]
+atlas = ExtResource("2_3aiw2")
+region = Rect2(42, 0, 14, 44)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_knros"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nl7fl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oc3ka")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_seaso")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7u7e0")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0a65b"]
+size = Vector2(16, 41.0001)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qp4pe"]
+size = Vector2(16.0001, 41.0001)
+
+[node name="Guard" type="CharacterBody2D"]
+z_index = 1
+scale = Vector2(0.999998, 0.999998)
+script = ExtResource("1_0bqln")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -22)
+sprite_frames = SubResource("SpriteFrames_knros")
+autoplay = "default"
+frame_progress = 0.30386
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -20.5)
+shape = SubResource("RectangleShape2D_0a65b")
+
+[node name="Actionable" parent="." node_paths=PackedStringArray("colliders") instance=ExtResource("3_ccc30")]
+dialogue_resource = ExtResource("4_d5db5")
+dialogue_character = "guard"
+colliders = [NodePath("../CollisionShape2D"), NodePath("CollisionShape2D")]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Actionable"]
+position = Vector2(-16, -20.5)
+shape = SubResource("RectangleShape2D_qp4pe")

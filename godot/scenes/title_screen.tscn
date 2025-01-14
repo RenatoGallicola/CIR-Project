@@ -1,0 +1,107 @@
+[gd_scene load_steps=6 format=3 uid="uid://h0tvl0w3p4h"]
+
+[ext_resource type="Script" path="res://scripts/title_screen.gd" id="1_6g3qw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_38t6g"]
+bg_color = Color(0.545098, 0.576471, 0.686275, 1)
+border_width_left = 10
+border_width_top = 10
+border_width_right = 10
+border_width_bottom = 10
+border_color = Color(0.443137, 0.254902, 0.231373, 1)
+border_blend = true
+
+[sub_resource type="Theme" id="Theme_vk58a"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_olr1l"]
+bg_color = Color(0.443137, 0.254902, 0.231373, 1)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(0.25098, 0.207843, 0.176471, 1)
+border_blend = true
+corner_radius_top_right = 40
+corner_radius_bottom_left = 40
+corner_detail = 1
+shadow_color = Color(0.858824, 0.643137, 0.388235, 1)
+shadow_size = 2
+shadow_offset = Vector2(10, 10)
+
+[sub_resource type="Theme" id="Theme_tq2q3"]
+default_font_size = 53
+
+[node name="TitleScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_6g3qw")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_38t6g")
+
+[node name="Demo" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.363
+anchor_top = 0.146
+anchor_right = 0.637
+anchor_bottom = 0.319
+offset_left = -0.175995
+offset_top = 236.392
+offset_right = 0.175964
+offset_bottom = 208.288
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_vk58a")
+theme_override_font_sizes/font_size = 30
+text = "DEMO"
+
+[node name="Quit" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.735
+anchor_right = 0.5
+anchor_bottom = 0.735
+offset_left = -158.0
+offset_top = -22.28
+offset_right = 158.0
+offset_bottom = 61.72
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 30
+text = "QUIT"
+
+[node name="Title" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.193576
+anchor_top = 0.112654
+anchor_right = 0.806424
+anchor_bottom = 0.345679
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_olr1l")
+metadata/_edit_use_anchors_ = true
+
+[node name="TitleLabel" type="Label" parent="Title"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_tq2q3")
+text = "MULTIMODAL  ESCAPE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="pressed" from="Demo" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="Quit" to="." method="_on_quit_pressed"]

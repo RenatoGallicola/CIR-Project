@@ -1,0 +1,15 @@
+[remap]
+
+importer="dialogue_manager_compiler_13"
+type="Resource"
+uid="uid://lq4rnrajm85k"
+path="res://.godot/imported/wizard_sign.dialogue-83feeb5e877a55376412070fcd67759d.tres"
+
+[deps]
+
+source_file="res://dialogues/wizard_sign.dialogue"
+dest_files=["res://.godot/imported/wizard_sign.dialogue-83feeb5e877a55376412070fcd67759d.tres"]
+
+[params]
+
+defaults=true

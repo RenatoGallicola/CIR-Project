@@ -1,0 +1,110 @@
+~ start
+set reset = false
+set wizard_started = true
+set white_finished = false
+set white_started = true
+if white_encountered == true
+	=> riddle
+else 
+	=> intro
+	
+~ riddle 
+set white_waiting = true
+
+~ first
+set white_waiting = true
+White Wizard: With {{first_word}}, {{second_word}}, and {{third_word}} now found, let magic turn this stone around!
+	
+	Say the first word…
+.....[speed=0.1][next=auto]
+if error == false
+	White Wizard: Did you say… {{last_word}}?
+	- Yes
+		set first_word = last_word
+		set error = true
+		=> second
+	- No
+		set error = true
+		=> first
+	- Quit
+		set error = true
+		=> end
+else
+	White Wizard: Wait, I didn’t quite catch that. Could you say that word again?
+	=> first
+
+~ second
+White Wizard: With {{first_word}}, {{second_word}}, and {{third_word}} now found, let magic turn this stone around!
+	
+	Now, the second word…
+.....[speed=0.1][next=auto]
+if error == false
+	White Wizard: Did you say… {{last_word}}?
+	- Yes
+		set second_word = last_word
+		set error = true
+		=> third
+	- No
+		set error = true
+		=> second
+	- Quit
+		set error = true
+		=> end
+else
+	White Wizard: Wait, I didn’t quite catch that. Could you say that word again?
+	=> second
+	
+~ third
+White Wizard: With {{first_word}}, {{second_word}}, and {{third_word}} now found, let magic turn this stone around!
+	
+	Finally, say the last word...
+.....[speed=0.1][next=auto]
+if error == false
+	White Wizard: Did you say… {{last_word}}?
+	- Yes
+		set third_word = last_word
+		set error = true
+		=> check
+	- No
+		set error = true
+		=> third
+	- Quit
+		set error = true
+		=> end
+else
+	White Wizard: Wait, I didn’t quite catch that. Could you say that word again?
+	=> third
+
+~ check
+set check = true
+White Wizard: Ah, everything is in place. Let’s see if the spell works!
+=> result
+
+~ result
+if correct == true
+	set reset = true
+	White Wizard: Ah, yes! You did it! The spell is complete! You may proceed...
+    => end
+else
+	set reset = true
+	White Wizard: Hmm… that didn’t work at all. The spell didn’t activate! Something must have been wrong with one of the words...
+	White Wizard: Try again, but this time, be sure to get every word exactly right!
+	- Retry
+		=> first
+	- Quit
+		=> end
+
+~ end
+set reset = true
+set wizard_finished = true
+set white_finished = true
+=> END
+
+~ intro
+White Wizard: Oh, thank goodness, someone with a brain! You there, help us! 
+White Wizard: We were so close to perfecting the spell to turn stone into gold, but that bumbling intern ruined everything!
+White Wizard: Ink everywhere! Now the key words are gone, and all we have are scraps of memory. 
+White Wizard: Each of us remembers a piece, but none of us can solve it alone!
+White Wizard: Listen carefully... Here’s the formula, what we can still read, at least. Fill in the missing words if you can!
+set white_encountered = true
+=> riddle

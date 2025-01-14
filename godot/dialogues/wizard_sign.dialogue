@@ -1,0 +1,5 @@
+~ start
+set wizard_started = true
+Sign: [shake rate=20 level=10]WARNING: Magician Study in Progress! Assistance Required! Intern Error Alert: Critical Formula Incomplete. Visitors must solve riddles to proceed![/shake]
+set wizard_finished = true
+=> END

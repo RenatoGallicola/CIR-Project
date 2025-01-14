@@ -1,0 +1,15 @@
+[remap]
+
+importer="dialogue_manager_compiler_13"
+type="Resource"
+uid="uid://c1xjjga5ujkgs"
+path="res://.godot/imported/prince.dialogue-196ad050f5effc4d8740f95fa7db48a1.tres"
+
+[deps]
+
+source_file="res://dialogues/prince.dialogue"
+dest_files=["res://.godot/imported/prince.dialogue-196ad050f5effc4d8740f95fa7db48a1.tres"]
+
+[params]
+
+defaults=true

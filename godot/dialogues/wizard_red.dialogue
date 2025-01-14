@@ -1,0 +1,5 @@
+~ start
+set wizard_started = true
+Red Wizard: I am alive, but I do not breathe. I can eat, but I do not drink. I can grow, yet I do not move. What am I?
+set wizard_finished = true
+=> END

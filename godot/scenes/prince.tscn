@@ -1,0 +1,92 @@
+[gd_scene load_steps=14 format=3 uid="uid://drosxi14gf7vv"]
+
+[ext_resource type="Script" path="res://scripts/npc.gd" id="1_gk78p"]
+[ext_resource type="Texture2D" uid="uid://3gmndnauqbav" path="res://assets/sprites/wizard_red.png" id="2_dufbu"]
+[ext_resource type="PackedScene" uid="uid://dxquwe1nnl7i2" path="res://scenes/actionable.tscn" id="3_h1wld"]
+[ext_resource type="Resource" uid="uid://c3t1sjl8370i7" path="res://dialogues/wizard_red.dialogue" id="4_cw0yx"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s4aps"]
+atlas = ExtResource("2_dufbu")
+region = Rect2(0, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4gdi4"]
+atlas = ExtResource("2_dufbu")
+region = Rect2(35, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_b5pt8"]
+atlas = ExtResource("2_dufbu")
+region = Rect2(70, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_iyqk3"]
+atlas = ExtResource("2_dufbu")
+region = Rect2(105, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8f5g3"]
+atlas = ExtResource("2_dufbu")
+region = Rect2(140, 0, 35, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_6p8ki"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s4aps")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4gdi4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_b5pt8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_iyqk3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8f5g3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0a65b"]
+size = Vector2(9.50002, 9.00002)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qp4pe"]
+size = Vector2(5.00001, 9.00002)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_355dg"]
+size = Vector2(8.00002, 9)
+
+[node name="Wizard" type="CharacterBody2D"]
+z_index = 1
+scale = Vector2(0.999998, 0.999998)
+script = ExtResource("1_gk78p")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -7.5)
+scale = Vector2(-0.5, 0.469)
+sprite_frames = SubResource("SpriteFrames_6p8ki")
+autoplay = "default"
+frame_progress = 0.859904
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0.25, -4.50001)
+shape = SubResource("RectangleShape2D_0a65b")
+disabled = true
+
+[node name="Actionable" parent="." node_paths=PackedStringArray("colliders") instance=ExtResource("3_h1wld")]
+dialogue_resource = ExtResource("4_cw0yx")
+dialogue_character = "wizard"
+colliders = [NodePath("../CollisionShape2D"), NodePath("CollisionShape2D")]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Actionable"]
+position = Vector2(-10.5, -4.50001)
+shape = SubResource("RectangleShape2D_qp4pe")
+
+[node name="Actionable2" parent="." node_paths=PackedStringArray("colliders") instance=ExtResource("3_h1wld")]
+colliders = [NodePath("../Actionable/CollisionShape2D")]
+dialogue = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Actionable2"]
+position = Vector2(9.00002, -4.50002)
+shape = SubResource("RectangleShape2D_355dg")

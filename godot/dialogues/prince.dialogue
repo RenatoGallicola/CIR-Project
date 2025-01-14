@@ -1,0 +1,5 @@
+~ start
+set wizard_started = true
+Prince: Sabotage the catapults? They’ve framed me. The kingdom believes their lies while I rot in this cell. I have to escape and find the truth!	
+set wizard_finished = true
+=> END
