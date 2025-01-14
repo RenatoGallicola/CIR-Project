@@ -9,7 +9,7 @@ from pydub.effects import normalize
 recognizer = sr.Recognizer()
 
 text = "The quick brown ___ jumps over the lazy ___."
-missing_words = ["fox", "dog"]
+missing_words = ["stone", "gold", "coin"]
 
 print("Fill in the blanks in the following text:")
 print(text)

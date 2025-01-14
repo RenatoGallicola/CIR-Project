@@ -9,7 +9,10 @@ sys.path.append(module_path)
 from hand_gesture_recognition import HandGesture
 import random
 import socket
-from constants import SERVER_IP, SERVER_PORT
+module_dir = os.path.dirname(__file__)
+module_path = os.path.join(module_dir, '../../Utils')
+sys.path.append(module_path)
+from constants import SERVER_IP, SERVER_PORT_RPS
 import json
 import math
 import base64
@@ -65,7 +68,7 @@ class RockPaperScissorsStandard:
         move = self.__hand_gesture.get_current_gesture()
         if move is None:
             move = "Invalid move"
-        opp_move = random.choice(["Rock", "Paper", "Scissors", "Scissors", "Scissors"])
+        opp_move = random.choice(["Rock", "Rock", "Paper", "Paper", "Scissors", "Scissors", "Scissors", "Scissors", "Scissors", "Scissors"])
         # opp_move = random.choice(["Scissors"])
         outcome, score = self.__compute_outcome(move, opp_move)
 
@@ -79,7 +82,7 @@ class RockPaperScissorsStandard:
         data = json.dumps(payload).encode('utf-8')
 
         if len(data) <= 65507:
-            self.__client_socket.sendto(data, (SERVER_IP, SERVER_PORT))
+            self.__client_socket.sendto(data, (SERVER_IP, SERVER_PORT_RPS))
         else:
             print("Data size exceeds the maximum allowed size for a UDP packet.")
 
